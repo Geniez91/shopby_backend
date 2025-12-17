@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import org.shopby_backend.exception.users.UsersCreateException;
 import org.shopby_backend.users.dto.UserInputDto;
 import org.shopby_backend.users.dto.UsersDto;
+import org.shopby_backend.users.model.RoleEntity;
+import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,11 +26,15 @@ public class UsersService {
             throw new UsersCreateException("Votre email est invalide");
         }
 
+        final RoleEntity roleUser=new RoleEntity();
+        roleUser.setLibelle(TypeRoleEnum.USER);
+
         UsersEntity user = UsersEntity.builder()
                 .nom(userInputDto.nom())
                 .prenom(userInputDto.prenom())
                 .password(bCryptPasswordEncoder.encode(userInputDto.password()))
                 .email(userInputDto.email())
+                .role(roleUser)
                 .build();
         UsersEntity savedUser = usersRepository.save(user);
 
