@@ -23,6 +23,9 @@ class UsersServiceTest {
     @Mock
     UsersRepository usersRepository;
 
+    @Mock
+    ValidationService validationService;
+
     /// Permet d'injecter les mocks de repository dans le service
     @InjectMocks
     UsersService usersService;
@@ -30,7 +33,7 @@ class UsersServiceTest {
 
     @BeforeEach
     void setUp() {
-        usersService = new UsersService(usersRepository, new BCryptPasswordEncoder());
+        usersService = new UsersService(usersRepository, new BCryptPasswordEncoder(),validationService);
     }
 
     @Test
