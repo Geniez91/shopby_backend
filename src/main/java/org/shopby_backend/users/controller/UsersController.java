@@ -24,11 +24,6 @@ public class UsersController {
     private final UsersService usersService;
     private final JwtService jwtService;
 
-    @GetMapping("/users")
-    public String findAll(){
-        return "test";
-    }
-
     @PostMapping("/register")
     public UsersDto addUser(@RequestBody UserInputDto userInputDto){
         return usersService.addUser(userInputDto);

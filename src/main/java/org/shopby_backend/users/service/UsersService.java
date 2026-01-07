@@ -16,8 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.Optional;
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -101,5 +100,23 @@ public class UsersService implements UserDetailsService {
             user.setPassword(passwordCrypted);
             this.usersRepository.save(user);
         }
+    }
+
+    public List<UsersOutput> findAllUsers(){
+        return this.usersRepository.findAll().stream().map(user->new UsersOutput(
+                user.getId(),
+                user.getPrenom(),
+                user.getNom(),
+                user.getPassword(),
+                user.getEmail()
+        )).toList();
+    }
+
+    public void updateUserRole(UserUpdateRoleDto userInputDto){
+        UsersEntity user=this.usersRepository.findByEmail(userInputDto.email());
+        final RoleEntity roleAdmin=new RoleEntity();
+        roleAdmin.setLibelle(userInputDto.role());
+        user.setRole(roleAdmin);
+        usersRepository.save(user);
     }
 }
