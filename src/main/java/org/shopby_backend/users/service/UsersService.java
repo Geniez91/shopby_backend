@@ -11,6 +11,9 @@ import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +22,7 @@ import java.util.Optional;
 
 @AllArgsConstructor
 @Service
-public class UsersService {
+public class UsersService implements UserDetailsService {
     private UsersRepository usersRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private ValidationService validationService;
@@ -71,7 +74,14 @@ public class UsersService {
         userExist.setEnabled(true);
         this.usersRepository.save(userExist);
         return "L'utilisateur a bien été activé";
-
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        UserDetails userDetails=usersRepository.findByEmail(email);
+        if(userDetails==null){
+            throw new UsernameNotFoundException("Email non valide");
+        }
+        return userDetails;
+    }
 }

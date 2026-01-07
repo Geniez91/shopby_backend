@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -40,11 +41,16 @@ public enum TypeRoleEnum {
     @Getter
     Set<TypePermission> permissions;
 
-    public Collection<? extends GrantedAuthority>getAuthorities() {
-        List<SimpleGrantedAuthority> grantedAuthorities=this.getPermissions().stream().map(permission->new SimpleGrantedAuthority((permission.name()))).toList();
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Crée une liste mutable à partir du stream
+        List<SimpleGrantedAuthority> grantedAuthorities = this.getPermissions()
+                .stream()
+                .map(permission -> new SimpleGrantedAuthority(permission.name()))
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_"+this.name()));
+        grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
 
         return grantedAuthorities;
     }
+
 }
