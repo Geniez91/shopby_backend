@@ -8,14 +8,18 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.jwt.model.JwtEntity;
 import org.shopby_backend.jwt.persistence.JwtRepository;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.service.UsersService;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +27,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Transactional
 @AllArgsConstructor
 @Service
@@ -121,5 +126,26 @@ public class JwtService {
     public <T> T getClaim(String token, Function<Claims, T> function){
         Claims claims=this.getAllClaims(token);
         return function.apply(claims);
+    }
+
+    public void logOut() {
+        UsersEntity user= (UsersEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();/// récupération de la session
+
+        /// Récupration du token a partir du User
+        JwtEntity jwt=jwtRepository.findByUserValidToken(user.getEmail(),false,false);
+
+        if(jwt==null){
+            throw  new JwtException("Token not found");
+        }
+        jwt.setExpired(true);
+        jwt.setDisabled(true);
+        jwtRepository.save(jwt);
+    }
+
+    /// Suppresion tous les minutes des tokens expired ou désactivé
+    @Scheduled(cron = "0 */1 * * * *")
+    public void removeUselessJwtToken(){
+        log.info("Removing useless jwt token", Instant.now());
+        this.jwtRepository.deleteAllByExpiredAndDisabled(true,true);
     }
 }

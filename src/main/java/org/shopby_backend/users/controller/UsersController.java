@@ -64,4 +64,10 @@ public class UsersController {
         }
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/logOut")
+    public void logOut(){
+        this.jwtService.logOut();
+    }
+
 }
