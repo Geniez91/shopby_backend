@@ -3,10 +3,7 @@ package org.shopby_backend.users.controller;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.jwt.service.JwtService;
-import org.shopby_backend.users.dto.UserActivationDto;
-import org.shopby_backend.users.dto.UserInputDto;
-import org.shopby_backend.users.dto.UserLoginDto;
-import org.shopby_backend.users.dto.UsersDto;
+import org.shopby_backend.users.dto.*;
 import org.shopby_backend.users.service.UsersService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -68,6 +65,18 @@ public class UsersController {
     @PostMapping("/logOut")
     public void logOut(){
         this.jwtService.logOut();
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/reset-password")
+    public void resetPassword(@RequestBody UserResetDto userResetDto){
+        usersService.resetPassword(userResetDto);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/new-password")
+    public void newPassword(@RequestBody UserNewPasswordDto userNewPasswordDto){
+        usersService.newPassword(userNewPasswordDto);
     }
 
 }

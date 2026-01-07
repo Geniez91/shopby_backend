@@ -3,9 +3,7 @@ package org.shopby_backend.users.service;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.exception.users.UsersCreateException;
 import org.shopby_backend.exception.users.ValidationAccountException;
-import org.shopby_backend.users.dto.UserActivationDto;
-import org.shopby_backend.users.dto.UserInputDto;
-import org.shopby_backend.users.dto.UsersDto;
+import org.shopby_backend.users.dto.*;
 import org.shopby_backend.users.model.RoleEntity;
 import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
@@ -18,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -83,5 +82,24 @@ public class UsersService implements UserDetailsService {
             throw new UsernameNotFoundException("Email non valide");
         }
         return userDetails;
+    }
+
+    public void resetPassword(UserResetDto userResetDto){
+        UsersEntity user= (UsersEntity) this.loadUserByUsername(userResetDto.email());
+        this.validationService.save(user);
+    }
+
+    public void newPassword(UserNewPasswordDto userNewPasswordDto){
+        /// On recherche l'utilisateur par son adresse mail
+        UsersEntity user=usersRepository.findByEmail(userNewPasswordDto.email());
+
+        /// On regarde si le code donnait correspond
+        final ValidationEntity validation=this.validationService.readCode(userNewPasswordDto.code());
+
+        if(validation.getUser().getEmail().equals(user.getEmail())){
+            String passwordCrypted=bCryptPasswordEncoder.encode(userNewPasswordDto.password());
+            user.setPassword(passwordCrypted);
+            this.usersRepository.save(user);
+        }
     }
 }
