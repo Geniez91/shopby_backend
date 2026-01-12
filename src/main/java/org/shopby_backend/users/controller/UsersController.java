@@ -74,4 +74,10 @@ public class UsersController {
         usersService.newPassword(userNewPasswordDto);
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping("/user/{userId}")
+    public UserOutputInfoUpdateDto updateUserInfo(@PathVariable Long userId,@RequestBody UserInfoUpdateDto userInfoUpdate){
+        return usersService.updateUserInfo(userId,userInfoUpdate);
+    }
+
 }

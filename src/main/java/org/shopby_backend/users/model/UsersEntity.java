@@ -30,11 +30,18 @@ public class UsersEntity implements UserDetails {
 
     private String email;
 
+    private String country;
+
+    @Column(name = "delivery_address")
+    private String deliveryAddress;
+
+    @Column(name = "billing_address")
+    private String billingAddress;
+
     private Boolean enabled=false;
 
     @OneToOne(cascade = CascadeType.ALL)
     private RoleEntity role;
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

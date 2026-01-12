@@ -2,6 +2,7 @@ package org.shopby_backend.users.service;
 
 import lombok.AllArgsConstructor;
 import org.shopby_backend.exception.users.UsersCreateException;
+import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.exception.users.ValidationAccountException;
 import org.shopby_backend.users.dto.*;
 import org.shopby_backend.users.model.RoleEntity;
@@ -43,7 +44,10 @@ public class UsersService implements UserDetailsService {
                 .password(bCryptPasswordEncoder.encode(userInputDto.password()))
                 .email(userInputDto.email())
                 .role(roleUser)
+                .country(userInputDto.country())
                 .enabled(false)
+                .billingAddress(null)
+                .deliveryAddress(null)
                 .build();
         UsersEntity savedUser = usersRepository.save(user);
 
@@ -56,7 +60,8 @@ public class UsersService implements UserDetailsService {
                 savedUser.getNom(),
                 savedUser.getPrenom(),
                 savedUser.getPassword(),
-                savedUser.getEmail());
+                savedUser.getEmail(),
+                savedUser.getCountry());
     }
 
     public String activationUser(String code) {
@@ -118,5 +123,49 @@ public class UsersService implements UserDetailsService {
         roleAdmin.setLibelle(userInputDto.role());
         user.setRole(roleAdmin);
         usersRepository.save(user);
+    }
+
+    public UserOutputInfoUpdateDto updateUserInfo(Long idUser, UserInfoUpdateDto userInfoUpdate){
+        UsersEntity user = usersRepository.findById(idUser)
+                .orElseThrow(() -> new UsersUpdateException("L'utilisateur n'existe pas"));
+
+        if(userInfoUpdate.prenom()!=null&& !userInfoUpdate.prenom().isBlank()){
+            user.setPrenom(userInfoUpdate.prenom());
+        }
+
+        if(userInfoUpdate.nom()!=null&& !userInfoUpdate.nom().isBlank()){
+            user.setNom(userInfoUpdate.nom());
+        }
+
+        if(userInfoUpdate.email()!=null&& !userInfoUpdate.email().isBlank()){
+            user.setEmail(userInfoUpdate.email());
+        }
+
+        if(userInfoUpdate.country()!=null&& !userInfoUpdate.country().isBlank()){
+            user.setCountry(userInfoUpdate.country());
+        }
+
+        if(userInfoUpdate.password()!=null&& !userInfoUpdate.password().isBlank()){
+            bCryptPasswordEncoder.encode(userInfoUpdate.password());
+        }
+
+        if(userInfoUpdate.billingAddress()!=null&& !userInfoUpdate.billingAddress().isBlank()){
+            user.setBillingAddress(userInfoUpdate.billingAddress());
+        }
+
+        if(userInfoUpdate.deliveryAddress() !=null&& !userInfoUpdate.deliveryAddress().isBlank()){
+            user.setDeliveryAddress(userInfoUpdate.deliveryAddress());
+        }
+        UsersEntity savedUsers= usersRepository.save(user);
+        return UserOutputInfoUpdateDto.builder()
+                .id(savedUsers.getId())
+                .nom(savedUsers.getNom())
+                .prenom(savedUsers.getPrenom())
+                .password(savedUsers.getPassword())
+                .email(savedUsers.getEmail())
+                .country(savedUsers.getCountry())
+                .deliveryAddress(savedUsers.getDeliveryAddress())
+                .billingAddress(savedUsers.getBillingAddress())
+                .build();
     }
 }

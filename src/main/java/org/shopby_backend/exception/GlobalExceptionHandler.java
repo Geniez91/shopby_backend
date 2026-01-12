@@ -2,6 +2,7 @@ package org.shopby_backend.exception;
 
 import org.apache.coyote.BadRequestException;
 import org.shopby_backend.exception.users.UsersCreateException;
+import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.exception.users.ValidationAccountException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -23,6 +24,12 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
   ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
   return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
 }
+
+@ExceptionHandler(UsersUpdateException.class)
+    public ResponseEntity<ProblemDetail>catchUsersUpdate(UsersUpdateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
 
 
 @ExceptionHandler(BadRequestException.class)
