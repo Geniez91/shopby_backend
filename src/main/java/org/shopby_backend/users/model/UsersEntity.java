@@ -40,7 +40,7 @@ public class UsersEntity implements UserDetails {
 
     private Boolean enabled=false;
 
-    @OneToOne(cascade = CascadeType.ALL)
+ @OneToOne(cascade = CascadeType.ALL)
     private RoleEntity role;
 
     @Override
