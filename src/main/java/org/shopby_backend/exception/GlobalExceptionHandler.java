@@ -3,6 +3,7 @@ package org.shopby_backend.exception;
 import org.apache.coyote.BadRequestException;
 import org.shopby_backend.exception.article.ArticleCreateException;
 import org.shopby_backend.exception.brand.BrandCreateException;
+import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
 import org.shopby_backend.exception.brand.BrandUpdateException;
 import org.shopby_backend.exception.users.UsersCreateException;
@@ -56,6 +57,11 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
     }
     @ExceptionHandler(BrandGetException.class)
     public ResponseEntity<ProblemDetail>catchBrandGetException(BrandGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+    @ExceptionHandler(BrandDeleteException.class)
+    public ResponseEntity<ProblemDetail>catchBrandDeleteException(BrandGetException ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }

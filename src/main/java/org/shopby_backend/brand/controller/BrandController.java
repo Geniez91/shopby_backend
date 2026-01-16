@@ -33,4 +33,10 @@ public class BrandController {
         return brandService.findBrandById(brandId);
     }
 
+    @DeleteMapping
+    public BrandOutputDto deleteBrand(@PathVariable Long brandId){
+        return brandService.deleteBrand(brandId);
+    }
+
+
 }

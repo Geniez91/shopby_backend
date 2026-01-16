@@ -11,6 +11,7 @@ import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.BrandCreateException;
+import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
 import org.shopby_backend.exception.brand.BrandUpdateException;
 import org.shopby_backend.users.model.UsersEntity;
@@ -145,6 +146,26 @@ class BrandServiceTest {
         BrandGetException brandGetException= Assertions.assertThrows(
                 BrandGetException.class,
                 () -> brandService.findBrandById(1L)
+        );
+        Assertions.assertEquals("L'id saisie ne correspond à aucune marque",brandGetException.getMessage());
+    }
+
+    @Test
+    void shouldDeleteBrand(){
+        BrandEntity brandEntity=BrandEntity.builder().idBrand(1L).libelle("DC").build();
+        when(brandRepository.findByIdBrand(1L)).thenReturn(brandEntity);
+
+        BrandOutputDto brandOutputDto= brandService.deleteBrand(1L);
+        Assertions.assertEquals(brandOutputDto.libelle(),"DC");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNoBrandDelete(){
+        when(brandRepository.findByIdBrand(1L)).thenReturn(null);
+
+        BrandDeleteException brandGetException= Assertions.assertThrows(
+                BrandDeleteException.class,
+                () -> brandService.deleteBrand(1L)
         );
         Assertions.assertEquals("L'id saisie ne correspond à aucune marque",brandGetException.getMessage());
     }

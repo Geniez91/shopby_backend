@@ -6,6 +6,7 @@ import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.BrandCreateException;
+import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
 import org.shopby_backend.exception.brand.BrandUpdateException;
 import org.springframework.stereotype.Service;
@@ -60,6 +61,15 @@ public class BrandService {
         if(brandEntity==null){
             throw new BrandGetException("L'id saisie ne correspond à aucune marque");
         }
+        return new BrandOutputDto(brandEntity.getIdBrand(),brandEntity.getLibelle());
+    }
+
+    public BrandOutputDto deleteBrand(Long id) {
+        BrandEntity brandEntity = brandRepository.findByIdBrand(id);
+        if(brandEntity==null){
+            throw new BrandDeleteException("L'id saisie ne correspond à aucune marque");
+        }
+        brandRepository.delete(brandEntity);
         return new BrandOutputDto(brandEntity.getIdBrand(),brandEntity.getLibelle());
     }
 }
