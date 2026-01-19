@@ -6,6 +6,10 @@ import org.shopby_backend.exception.brand.BrandCreateException;
 import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
 import org.shopby_backend.exception.brand.BrandUpdateException;
+import org.shopby_backend.exception.typeArticle.TypeArticleAddException;
+import org.shopby_backend.exception.typeArticle.TypeArticleDeleteException;
+import org.shopby_backend.exception.typeArticle.TypeArticleGetException;
+import org.shopby_backend.exception.typeArticle.TypeArticleUpdateException;
 import org.shopby_backend.exception.users.UsersCreateException;
 import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.exception.users.ValidationAccountException;
@@ -62,6 +66,30 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
     }
     @ExceptionHandler(BrandDeleteException.class)
     public ResponseEntity<ProblemDetail>catchBrandDeleteException(BrandGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(TypeArticleAddException.class)
+    public ResponseEntity<ProblemDetail>catchTypeArticleAddException(TypeArticleAddException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(TypeArticleUpdateException.class)
+    public ResponseEntity<ProblemDetail>catchTypeArticleUpdateException(TypeArticleUpdateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(TypeArticleDeleteException.class)
+    public ResponseEntity<ProblemDetail>catchTypeArticleDeleteException(TypeArticleDeleteException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(TypeArticleGetException.class)
+    public ResponseEntity<ProblemDetail>catchTypeArticleDeleteException(TypeArticleGetException ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }

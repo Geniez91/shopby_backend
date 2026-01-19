@@ -1,16 +1,14 @@
-package org.shopby_backend.article.model;
+package org.shopby_backend.typeArticle.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity
+@Builder
 @Table(name="type_article")
 public class TypeArticleEntity {
     @Id

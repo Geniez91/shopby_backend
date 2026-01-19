@@ -3,6 +3,7 @@ package org.shopby_backend.article.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.shopby_backend.brand.model.BrandEntity;
+import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 
 import java.math.BigDecimal;
 import java.util.Date;
