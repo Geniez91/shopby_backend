@@ -2,6 +2,9 @@ package org.shopby_backend.exception;
 
 import org.apache.coyote.BadRequestException;
 import org.shopby_backend.exception.article.ArticleCreateException;
+import org.shopby_backend.exception.article.ArticleDeleteException;
+import org.shopby_backend.exception.article.ArticleGetException;
+import org.shopby_backend.exception.article.ArticleUpdateException;
 import org.shopby_backend.exception.brand.BrandCreateException;
 import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
@@ -90,6 +93,24 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
 
     @ExceptionHandler(TypeArticleGetException.class)
     public ResponseEntity<ProblemDetail>catchTypeArticleDeleteException(TypeArticleGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(ArticleUpdateException.class)
+    public ResponseEntity<ProblemDetail>catchArticleUpdateException(ArticleUpdateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(ArticleDeleteException.class)
+    public ResponseEntity<ProblemDetail>catchArticleDeleteException(ArticleDeleteException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(ArticleGetException.class)
+    public ResponseEntity<ProblemDetail>catchArticleGetException(ArticleGetException ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }

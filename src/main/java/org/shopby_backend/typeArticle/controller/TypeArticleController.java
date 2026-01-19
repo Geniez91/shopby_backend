@@ -13,27 +13,27 @@ import java.util.List;
 public class TypeArticleController {
     private TypeArticleService typeArticleService;
 
-    @PostMapping
+    @PostMapping("/type_article")
     public TypeArticleOutputDto addTypeArticle(@RequestBody TypeArticleDto typeArticleDto) {
         return typeArticleService.addTypeArticle(typeArticleDto);
     }
 
-    @PatchMapping
+    @PatchMapping("/type_article")
     public TypeArticleOutputDto updateTypeArticle(@PathVariable Long id, @RequestBody TypeArticleDto typeArticleDto) {
         return typeArticleService.updateTypeArticle(id, typeArticleDto);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/type_article/{id}")
     public TypeArticleOutputDto deleteTypeArticle(@PathVariable Long id) {
         return typeArticleService.deleteTypeArticle(id);
     }
 
-    @GetMapping
+    @GetMapping("/type_article")
     public List<TypeArticleOutputDto> getAllTypeArticle() {
         return typeArticleService.getAllTypeArticle();
     }
 
-    @GetMapping
+    @GetMapping("/type_article/{id}")
     public TypeArticleOutputDto getTypeArticleById(@PathVariable Long id) {
         return typeArticleService.getTypeArticleById(id);
     }

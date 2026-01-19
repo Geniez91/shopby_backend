@@ -1,4 +1,6 @@
 package org.shopby_backend.article.dto;
 
-public record AddArticleInputDto(String nameArticle,String descriptionArticle,Number price,Long idBrand,Long idType) {
+import java.math.BigDecimal;
+
+public record AddArticleInputDto(String nameArticle, String descriptionArticle, BigDecimal price, Long idBrand, Long idType) {
 }
