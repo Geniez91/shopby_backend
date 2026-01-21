@@ -52,7 +52,7 @@ public class ArticleService {
         }
 
         BrandEntity brandEntity = brandRepository.findById(addArticleInputDto.idBrand()).orElseThrow(()->new ArticleCreateException("La Marque est introuvable"));
-        TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(addArticleInputDto.idType()).orElseThrow(()->new ArticleCreateException("La Type de article est introuvable"));
+        TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(addArticleInputDto.idType()).orElseThrow(()->new ArticleCreateException("Le Type de article est introuvable"));
 
         ArticleEntity article = ArticleEntity.builder()
                 .name(addArticleInputDto.nameArticle())
@@ -84,7 +84,7 @@ public class ArticleService {
             articleEntity.setDescription(addArticleInputDto.descriptionArticle());
         }
         if(addArticleInputDto.price()!=null){
-            articleEntity.setPrice((BigDecimal) addArticleInputDto.price());
+            articleEntity.setPrice(addArticleInputDto.price());
         }
         if(addArticleInputDto.idBrand()!=null){
             if(!Objects.equals(articleEntity.getBrand().getIdBrand(), addArticleInputDto.idBrand())){

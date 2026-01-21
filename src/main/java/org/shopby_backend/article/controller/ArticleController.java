@@ -23,6 +23,11 @@ public AddArticleOutputDto updateArticle(@PathVariable Long id,AddArticleInputDt
     return articleService.updateArticle(id, addArticleInputDto);
 }
 
+@DeleteMapping("/article/{id}")
+public AddArticleOutputDto deleteArticle(@PathVariable Long id){
+    return articleService.deleteArticle(id);
+}
+
 @GetMapping("/article")
 public List<AddArticleOutputDto> getAllArticles(){
     return articleService.getAllArticles();
