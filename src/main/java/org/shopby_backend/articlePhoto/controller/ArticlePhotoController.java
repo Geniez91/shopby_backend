@@ -1,0 +1,21 @@
+package org.shopby_backend.articlePhoto.controller;
+
+import lombok.AllArgsConstructor;
+import org.shopby_backend.articlePhoto.dto.ArticlePhotoOutputDto;
+import org.shopby_backend.articlePhoto.service.ArticlePhotoService;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@AllArgsConstructor
+@RestController
+public class ArticlePhotoController {
+    private ArticlePhotoService articlePhotoService;
+
+    @PostMapping(value = "/article/{idArticle}/photos",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public List<ArticlePhotoOutputDto> uploadPhotos(@PathVariable Long idArticle, @RequestPart("files") List<MultipartFile> files){
+        return  articlePhotoService.uploadPhotos(idArticle,files);
+    }
+}

@@ -14,12 +14,12 @@ public class ArticleController {
 private final ArticleService articleService;
 
 @PostMapping("/article")
-public AddArticleOutputDto addArticle(AddArticleInputDto addArticleInputDto){
+public AddArticleOutputDto addArticle(@RequestBody AddArticleInputDto addArticleInputDto){
    return articleService.addNewArticle(addArticleInputDto);
 }
 
 @PatchMapping("/article/{id}")
-public AddArticleOutputDto updateArticle(@PathVariable Long id,AddArticleInputDto addArticleInputDto){
+public AddArticleOutputDto updateArticle(@PathVariable Long id,@RequestBody AddArticleInputDto addArticleInputDto){
     return articleService.updateArticle(id, addArticleInputDto);
 }
 

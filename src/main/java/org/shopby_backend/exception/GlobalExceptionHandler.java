@@ -5,6 +5,7 @@ import org.shopby_backend.exception.article.ArticleCreateException;
 import org.shopby_backend.exception.article.ArticleDeleteException;
 import org.shopby_backend.exception.article.ArticleGetException;
 import org.shopby_backend.exception.article.ArticleUpdateException;
+import org.shopby_backend.exception.articlePhoto.ArticlePhotoUpload;
 import org.shopby_backend.exception.brand.BrandCreateException;
 import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
@@ -111,6 +112,12 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
 
     @ExceptionHandler(ArticleGetException.class)
     public ResponseEntity<ProblemDetail>catchArticleGetException(ArticleGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(ArticlePhotoUpload.class)
+    public ResponseEntity<ProblemDetail>catchArticlePhotoUploadException(ArticlePhotoUpload ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }

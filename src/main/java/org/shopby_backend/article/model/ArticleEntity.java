@@ -2,11 +2,13 @@ package org.shopby_backend.article.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.shopby_backend.articlePhoto.model.ArticlePhotoEntity;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -33,10 +35,13 @@ public class ArticleEntity {
     private Date creationDate;
 
     @ManyToOne
-    @JoinColumn(name = "brand_id")
+    @JoinColumn(name = "id_brand")
     private BrandEntity brand;
 
     @ManyToOne
-    @JoinColumn(name = "type_article_id_type_article")
+    @JoinColumn(name = "id_type_article")
     private TypeArticleEntity typeArticle;
+
+    @OneToMany()
+    private List<ArticlePhotoEntity> photos;
 }
