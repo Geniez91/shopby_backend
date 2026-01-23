@@ -6,6 +6,7 @@ import org.shopby_backend.jwt.service.JwtService;
 import org.shopby_backend.users.dto.*;
 import org.shopby_backend.users.service.UsersService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -73,7 +74,7 @@ public class UsersController {
     public void newPassword(@RequestBody UserNewPasswordDto userNewPasswordDto){
         usersService.newPassword(userNewPasswordDto);
     }
-
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE')")
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/user/{userId}")
     public UserOutputInfoUpdateDto updateUserInfo(@PathVariable Long userId,@RequestBody UserInfoUpdateDto userInfoUpdate){

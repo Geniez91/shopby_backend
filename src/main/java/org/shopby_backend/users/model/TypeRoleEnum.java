@@ -14,28 +14,61 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public enum TypeRoleEnum {
     USER(
-            Set.of(TypePermission.USER_CREATE_ACCOUNT,TypePermission.USER_CREATE_COMMENT)
+            Set.of(TypePermission.USER_CREATE,TypePermission.USER_READ,TypePermission.USER_UPDATE,TypePermission.ARTICLE_READ,TypePermission.ARTICLE_READ_ALL)
     ),
     ADMIN(
-            Set.of(TypePermission.USER_CREATE_COMMENT,
-                    TypePermission.USER_CREATE_ACCOUNT,
-                    TypePermission.MANAGER_CREATE,
-                    TypePermission.MANAGER_UPDATE,
-                    TypePermission.MANAGER_READ,
-                    TypePermission.MANAGER_DELETE,
-                    TypePermission.ADMIN_CREATE,
-                    TypePermission.ADMIN_DELETE,
-                    TypePermission.ADMIN_READ,
-                    TypePermission.ADMIN_UPDATE
+            Set.of(
+                    TypePermission.USER_CREATE,
+                    TypePermission.USER_READ,
+                    TypePermission.USER_UPDATE,
+                    TypePermission.USER_DELETE,
+                    TypePermission.USER_UPDATE_ROLE,
+
+                    TypePermission.ARTICLE_CREATE,
+                    TypePermission.ARTICLE_DELETE,
+                    TypePermission.ARTICLE_UPDATE,
+                    TypePermission.ARTICLE_READ,
+                    TypePermission.ARTICLE_READ_ALL,
+
+                    TypePermission.BRAND_CREATE,
+                    TypePermission.BRAND_READ,
+                    TypePermission.BRAND_READ_ALL,
+                    TypePermission.BRAND_UPDATE,
+                    TypePermission.BRAND_DELETE,
+
+                    TypePermission.TYPE_ARTICLE_CREATE,
+                    TypePermission.TYPE_ARTICLE_READ,
+                    TypePermission.TYPE_ARTICLE_READ_ALL,
+                    TypePermission.TYPE_ARTICLE_UPDATE,
+                    TypePermission.TYPE_ARTICLE_DELETE,
+
+                    TypePermission.ARTICLE_PHOTO_UPLOAD
             )
     ),
     MANAGER(
-            Set.of(TypePermission.USER_CREATE_COMMENT,
-                    TypePermission.USER_CREATE_ACCOUNT,
-                    TypePermission.MANAGER_CREATE,
-                    TypePermission.MANAGER_UPDATE,
-                    TypePermission.MANAGER_READ,
-                    TypePermission.MANAGER_DELETE)
+            Set.of( TypePermission.USER_CREATE,
+                    TypePermission.USER_READ,
+                    TypePermission.USER_UPDATE,
+
+                    TypePermission.ARTICLE_CREATE,
+                    TypePermission.ARTICLE_DELETE,
+                    TypePermission.ARTICLE_UPDATE,
+                    TypePermission.ARTICLE_READ,
+                    TypePermission.ARTICLE_READ_ALL,
+
+                    TypePermission.BRAND_CREATE,
+                    TypePermission.BRAND_READ,
+                    TypePermission.BRAND_READ_ALL,
+                    TypePermission.BRAND_UPDATE,
+                    TypePermission.BRAND_DELETE,
+
+                    TypePermission.TYPE_ARTICLE_CREATE,
+                    TypePermission.TYPE_ARTICLE_READ,
+                    TypePermission.TYPE_ARTICLE_READ_ALL,
+                    TypePermission.TYPE_ARTICLE_UPDATE,
+                    TypePermission.TYPE_ARTICLE_DELETE,
+
+                    TypePermission.ARTICLE_PHOTO_UPLOAD)
     );
 
     @Getter

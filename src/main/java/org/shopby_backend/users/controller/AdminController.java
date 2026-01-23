@@ -21,13 +21,13 @@ import java.util.List;
 public class AdminController {
     private final UsersService usersService;
 
-    @PreAuthorize("hasAnyAuthority('ADMIN_READ')")
+    @PreAuthorize("hasAnyAuthority('USER_READ_ALL')")
     @GetMapping("/users")
     public List<UsersOutput> findAllUsers(){
         return this.usersService.findAllUsers();
     }
 
-    @PreAuthorize("hasAnyAuthority('ADMIN_READ')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE_ROLE')")
     @PutMapping("/users")
     public void updateUserRole(@RequestBody UserUpdateRoleDto userInputDto){
         this.usersService.updateUserRole(userInputDto);
