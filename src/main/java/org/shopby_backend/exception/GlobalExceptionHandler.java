@@ -17,6 +17,7 @@ import org.shopby_backend.exception.typeArticle.TypeArticleUpdateException;
 import org.shopby_backend.exception.users.UsersCreateException;
 import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.exception.users.ValidationAccountException;
+import org.shopby_backend.exception.wishlist.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -121,9 +122,49 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
+    @ExceptionHandler(WishlistCreateException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistCreateException(WishlistCreateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(WishlistUpdateException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistUpdateException(WishlistUpdateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+    @ExceptionHandler(WishlistGetException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistGetException(WishlistGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+    @ExceptionHandler(WishlistGetAllByUserIdException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistGetAllByUserIdException(WishlistGetAllByUserIdException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+    @ExceptionHandler(WishlistAddItemException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistAddItemException(WishlistAddItemException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+    @ExceptionHandler(WishlistRemoveItemException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistRemoveItemException(WishlistRemoveItemException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(WishlistGetAllArticleException.class)
+    public ResponseEntity<ProblemDetail>catchWishlistGetArticleException(WishlistGetAllArticleException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
 
 
-@ExceptionHandler(BadRequestException.class)
+
+
+
+    @ExceptionHandler(BadRequestException.class)
 public ResponseEntity<ProblemDetail> handleBadRequestException(BadRequestException ex){
     ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
