@@ -70,7 +70,7 @@ public class WishlistService {
             throw new WishlistGetAllByUserIdException("L'id de l'utilisateur ne peut pas être null");
         }
         UsersEntity user=usersRepository.findById(wishListGetAllByIdDto.userId()).orElseThrow(()->new WishlistGetAllByUserIdException("L'id de l'utilisateur ne correspond à aucun utilisateur"));
-        return wishlistRepository.findByUserId(wishListGetAllByIdDto.userId()).stream().map(wishlistEntity -> {
+        return wishlistRepository.findByUserId(user.getId()).stream().map(wishlistEntity -> {
             return new WishlistOutputDto(wishlistEntity.getIdWishlist(), wishlistEntity.getUser().getId(),wishlistEntity.getName(),wishlistEntity.getDescription());
         }).toList();
     }
@@ -103,11 +103,11 @@ public class WishlistService {
         if(wishlistAddItemInputDto.idArticle()==null){
             throw new WishlistRemoveItemException("L'id de l'article ne doit pas être null");
         }
-        WishlistEntity wishlistEntity=wishlistRepository.findById(Math.toIntExact(idWishList)).orElseThrow(()->new WishlistAddItemException("L'id de la liste d'envie ne correpond a aucune liste d'envie"));
-        ArticleEntity articleEntity=articleRepository.findById(wishlistAddItemInputDto.idArticle()).orElseThrow(()-> new WishlistAddItemException("L'id de l'article ne correpond a aucun article"));
+        WishlistEntity wishlistEntity=wishlistRepository.findById(Math.toIntExact(idWishList)).orElseThrow(()->new WishlistRemoveItemException("L'id de la liste d'envie ne correpond a aucune liste d'envie"));
+        ArticleEntity articleEntity=articleRepository.findById(wishlistAddItemInputDto.idArticle()).orElseThrow(()-> new WishlistRemoveItemException("L'id de l'article ne correpond a aucun article"));
         WishlistItemEntity wishlistItemEntity=wishlistItemRepository.findByWishlist_idWishlistAndArticle_idArticle(idWishList, wishlistAddItemInputDto.idArticle());
         wishlistRepository.delete(wishlistEntity);
-        return new WishlistAddItemOutputDto(wishlistItemEntity.getWishlist().getIdWishlist(), wishlistItemEntity.getArticle().getIdArticle(),wishlistEntity.getUser().getId(),wishlistItemEntity.getWishlist().getName(),wishlistItemEntity.getWishlist().getDescription());
+        return new WishlistAddItemOutputDto(wishlistItemEntity.getWishlist().getIdWishlist(), articleEntity.getIdArticle(),wishlistEntity.getUser().getId(),wishlistItemEntity.getWishlist().getName(),wishlistItemEntity.getWishlist().getDescription());
     }
 
     public List<AddArticleOutputDto> getAllArticleByWishlistId(Long idWishList){
