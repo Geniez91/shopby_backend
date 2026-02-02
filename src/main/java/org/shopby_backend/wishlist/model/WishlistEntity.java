@@ -3,8 +3,6 @@ package org.shopby_backend.wishlist.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.shopby_backend.users.model.UsersEntity;
-import org.springframework.data.annotation.Id;
-
 import java.util.Date;
 
 @AllArgsConstructor

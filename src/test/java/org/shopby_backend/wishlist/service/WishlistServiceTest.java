@@ -453,7 +453,7 @@ class WishlistServiceTest {
                 .wishlist(wishlistEntity)
                 .build();
         List<WishlistItemEntity> wishlistEntityList= List.of(wishlistItem,wishlistItem2);
-        when(wishlistItemRepository.findByWishlist_id(1L)).thenReturn(wishlistEntityList);
+        when(wishlistItemRepository.findByWishlist_idWishlist(1L)).thenReturn(wishlistEntityList);
 
         List<AddArticleOutputDto> listAddArticleOutputDto = wishlistService.getAllArticleByWishlistId(1L);
 
@@ -471,7 +471,7 @@ class WishlistServiceTest {
 
     @Test
     void shouldThrownGetAllArticlesByWishListWhenNoWishlistIdFound(){
-        when(wishlistItemRepository.findByWishlist_id(1L)).thenReturn(null);
+        when(wishlistItemRepository.findByWishlist_idWishlist(1L)).thenReturn(null);
 
         WishlistGetAllArticleException wishlistGetAllArticleException =  assertThrows(WishlistGetAllArticleException.class,()->{
             wishlistService.getAllArticleByWishlistId(1L);

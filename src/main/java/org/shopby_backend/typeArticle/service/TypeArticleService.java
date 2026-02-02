@@ -19,26 +19,37 @@ public class TypeArticleService {
     private TypeArticleRepository typeArticleRepository;
 
     public TypeArticleOutputDto addTypeArticle(TypeArticleDto typeArticleDto) {
+        if (typeArticleDto == null) {
+            throw new TypeArticleAddException("Le type d'article ne peut pas être null");
+        }
         if (typeArticleDto.libelle() == null) {
             throw new TypeArticleAddException("Le libelle du type d'article ne peut pas être null");
         }
+
         TypeArticleEntity alreadyTypeArticle = typeArticleRepository.findByLibelle(typeArticleDto.libelle());
         if (alreadyTypeArticle != null) {
             throw new TypeArticleAddException("Le type d'article existe deja");
         }
-        Long parentId=null;
-        TypeArticleEntity typeArticleEntity = TypeArticleEntity
-                .builder()
+
+        TypeArticleEntity typeArticleEntity = TypeArticleEntity.builder()
                 .libelle(typeArticleDto.libelle())
                 .build();
+
+        Long parentId = null;
+
         if (typeArticleDto.parentId() != null) {
-            TypeArticleEntity parent=typeArticleRepository.findById(typeArticleDto.parentId()).orElseThrow(null);
+            TypeArticleEntity parent = typeArticleRepository.findById(typeArticleDto.parentId())
+                    .orElseThrow(() -> new TypeArticleAddException("Le parent est introuvable"));
+
             typeArticleEntity.setParent(parent);
-            parentId=typeArticleEntity.getParent().getIdTypeArticle();
+            parentId = parent.getIdTypeArticle();
         }
-        TypeArticleEntity savedTypeArticle=typeArticleRepository.save(typeArticleEntity);
-        return new TypeArticleOutputDto(savedTypeArticle.getIdTypeArticle(),savedTypeArticle.getLibelle(),parentId);
+
+        TypeArticleEntity savedTypeArticle = typeArticleRepository.save(typeArticleEntity);
+
+        return new TypeArticleOutputDto(savedTypeArticle.getIdTypeArticle(), savedTypeArticle.getLibelle(), parentId);
     }
+
 
     public TypeArticleOutputDto updateTypeArticle(Long idType,TypeArticleDto typeArticleDto) {
         TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idType).orElseThrow(()->new TypeArticleUpdateException("Le type d'article n'existe pas"));

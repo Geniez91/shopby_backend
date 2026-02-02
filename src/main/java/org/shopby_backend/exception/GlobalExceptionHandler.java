@@ -10,6 +10,11 @@ import org.shopby_backend.exception.brand.BrandCreateException;
 import org.shopby_backend.exception.brand.BrandDeleteException;
 import org.shopby_backend.exception.brand.BrandGetException;
 import org.shopby_backend.exception.brand.BrandUpdateException;
+import org.shopby_backend.exception.order.OrderDeleteException;
+import org.shopby_backend.exception.order.OrderGetByUserIdException;
+import org.shopby_backend.exception.order.OrderGetException;
+import org.shopby_backend.exception.order.OrderUpdateException;
+import org.shopby_backend.exception.status.StatusCreateException;
 import org.shopby_backend.exception.typeArticle.TypeArticleAddException;
 import org.shopby_backend.exception.typeArticle.TypeArticleDeleteException;
 import org.shopby_backend.exception.typeArticle.TypeArticleGetException;
@@ -159,6 +164,36 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
+    @ExceptionHandler(StatusCreateException.class)
+    public ResponseEntity<ProblemDetail>catchStatusCreateException(StatusCreateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(OrderUpdateException.class)
+    public ResponseEntity<ProblemDetail>catchOrderUpdateException(OrderUpdateException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(OrderDeleteException.class)
+    public ResponseEntity<ProblemDetail>catchOrderDeleteException(OrderDeleteException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(OrderGetException.class)
+    public ResponseEntity<ProblemDetail>catchOrderGetException(OrderGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(OrderGetByUserIdException.class)
+    public ResponseEntity<ProblemDetail>catchOrderGetByUserIdException(OrderGetByUserIdException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
 
 
 

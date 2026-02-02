@@ -27,6 +27,7 @@ public class AdminController {
         return this.usersService.findAllUsers();
     }
 
+
     @PreAuthorize("hasAnyAuthority('USER_UPDATE_ROLE')")
     @PutMapping("/users")
     public void updateUserRole(@RequestBody UserUpdateRoleDto userInputDto){

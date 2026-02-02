@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface WishlistItemRepository extends JpaRepository<WishlistItemEntity, WishListItemId> {
-
     WishlistItemEntity findByWishlist_idWishlistAndArticle_idArticle(Long wishlistId,Long articleId);
-    List<WishlistItemEntity> findByWishlist_id(Long wishlistId);
+    List<WishlistItemEntity> findByWishlist_idWishlist(Long wishlistId);
 }

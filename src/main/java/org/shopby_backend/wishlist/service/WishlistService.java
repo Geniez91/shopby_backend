@@ -114,7 +114,7 @@ public class WishlistService {
         if(idWishList==null){
             throw new WishlistGetAllArticleException("L'id de l'article ne doit pas être null");
         }
-        List<WishlistItemEntity> wishlistItemEntityList=wishlistItemRepository.findByWishlist_id(idWishList);
+        List<WishlistItemEntity> wishlistItemEntityList=wishlistItemRepository.findByWishlist_idWishlist(idWishList);
         if(wishlistItemEntityList==null){
             throw new WishlistGetAllArticleException("L'id de la liste d'envie n'a aucune liste d'envie ou ne contient aucun article");
         }
