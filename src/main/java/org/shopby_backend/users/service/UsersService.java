@@ -1,15 +1,17 @@
 package org.shopby_backend.users.service;
 
 import lombok.AllArgsConstructor;
-import org.shopby_backend.exception.users.UsersCreateException;
-import org.shopby_backend.exception.users.UsersUpdateException;
-import org.shopby_backend.exception.users.ValidationAccountException;
+import lombok.extern.slf4j.Slf4j;
+import org.shopby_backend.exception.users.*;
+import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.shopby_backend.users.dto.*;
 import org.shopby_backend.users.model.RoleEntity;
 import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,20 +21,29 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class UsersService implements UserDetailsService {
     private UsersRepository usersRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private ValidationService validationService;
+    private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
 
     public UsersDto addUser(UserInputDto userInputDto) {
-        if(usersRepository.findByEmail(userInputDto.email())!=null){
-            throw new UsersCreateException("Vos identifiants existe deja");
+        long start = System.nanoTime();
+        if(usersRepository.findByEmail(userInputDto.email()).isPresent()){
+            String message = "Vos identifiants existe deja";
+            UsersCreateException exception = new UsersCreateException(message);
+            logger.error(message,exception);
+            throw exception;
         }
 
         if(!userInputDto.email().contains("@")){
-            throw new UsersCreateException("Votre email est invalide");
+            String message = "Votre email est invalide";
+            UsersCreateException exception = new UsersCreateException(message);
+            logger.error(message,exception);
+            throw exception;
         }
 
         final RoleEntity roleUser=new RoleEntity();
@@ -55,6 +66,8 @@ public class UsersService implements UserDetailsService {
             validationService.save(savedUser);
         }
 
+        long durationMs = (System.nanoTime() - start)/1000000;
+        logger.info("L'utilisateur {} a bien été ajouté, durationMs = {}",savedUser.getId(),durationMs);
         return new UsersDto(
                 savedUser.getId(),
                 savedUser.getNom(),
@@ -65,37 +78,60 @@ public class UsersService implements UserDetailsService {
     }
 
     public String activationUser(String code) {
+        long start = System.nanoTime();
         ValidationEntity validation =this.validationService.readCode(code);
 
         if(Instant.now().isAfter(validation.getExpirationDate())){
-            throw new ValidationAccountException("Le code d'activitation a expiré");
+            ValidationAccountException exception = new ValidationAccountException("Le code d'utilisateur a expiré le "+validation.getExpirationDate());
+            logger.error("Le code d'utilisateur a expiré le {}",validation.getExpirationDate(),exception);
+            throw exception;
         }
 
-        UsersEntity userExist=this.usersRepository.findById(validation.getUser().getId())
-                .orElseThrow(()->new ValidationAccountException("L'utilisateur n'existe pas"));
+        UsersEntity userExist=this.usersRepository.findById(validation.getUser().getId()).orElseThrow(()->
+        {
+            ValidationAccountException exception = new ValidationAccountException("L'utilisateur n'existe pas avec l'id user "+validation.getUser().getId());
+            logger.error("L'utilisateur n'existe pas avec l'id user {}",validation.getUser().getId(),exception);
+            return exception;
+        });
 
         userExist.setEnabled(true);
         this.usersRepository.save(userExist);
+        long durationMs = (System.nanoTime() - start)/1000000;
+        logger.info("L'utilisateur {} a bien été activé, durationMs = {}",userExist.getId(),durationMs);
         return "L'utilisateur a bien été activé";
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserDetails userDetails=usersRepository.findByEmail(email);
-        if(userDetails==null){
-            throw new UsernameNotFoundException("Email non valide");
-        }
+        long start = System.nanoTime();
+
+        UserDetails userDetails=usersRepository.findByEmail(email).orElseThrow(()->{
+            UsernameNotFoundException exception = new UsernameNotFoundException("L'utilisateur n'existe pas avec l'email "+email);
+            logger.error("L'utilisateur n'existe pas avec l'email {}",email,exception);
+            return exception;
+        });
+
+        long durationMs = (System.nanoTime() - start)/1000000;
+        logger.info("L'utilisateur {} a bien été trouvé,durationMs = {}",userDetails.getUsername(),durationMs);
         return userDetails;
     }
 
     public void resetPassword(UserResetDto userResetDto){
-        UsersEntity user= (UsersEntity) this.loadUserByUsername(userResetDto.email());
+        long start = System.nanoTime();
+        UsersEntity user = (UsersEntity) this.loadUserByUsername(userResetDto.email());
         this.validationService.save(user);
+        long durationMs = (System.nanoTime() - start)/1000000;
+        logger.info("Le mot de passe a bien été reset avec l'email {},durationMs = {}",userResetDto.email(),durationMs);
     }
 
     public void newPassword(UserNewPasswordDto userNewPasswordDto){
+        long start = System.nanoTime();
         /// On recherche l'utilisateur par son adresse mail
-        UsersEntity user=usersRepository.findByEmail(userNewPasswordDto.email());
+        UsersEntity user=usersRepository.findByEmail(userNewPasswordDto.email()).orElseThrow(()->{
+            NewPasswordException exception = new NewPasswordException("L'email ne correspond a aucun utilisateur avec l'email "+userNewPasswordDto.email());
+            logger.error("L'email ne correspond a aucun utilisateur avec l'email {}",userNewPasswordDto.email(),exception);
+            return exception;
+        });
 
         /// On regarde si le code donnait correspond
         final ValidationEntity validation=this.validationService.readCode(userNewPasswordDto.code());
@@ -104,30 +140,49 @@ public class UsersService implements UserDetailsService {
             String passwordCrypted=bCryptPasswordEncoder.encode(userNewPasswordDto.password());
             user.setPassword(passwordCrypted);
             this.usersRepository.save(user);
+            long durationMs = (System.nanoTime() - start)/1000000;
+            logger.info("Le mot de passe de l'utilisateur a bien été changer avec l'email {}, durationMs = {}",userNewPasswordDto.email(),durationMs);
         }
     }
 
     public List<UsersOutput> findAllUsers(){
-        return this.usersRepository.findAll().stream().map(user->new UsersOutput(
+        long start = System.nanoTime();
+        List<UsersOutput> listUsers = this.usersRepository.findAll().stream().map(user->new UsersOutput(
                 user.getId(),
                 user.getPrenom(),
                 user.getNom(),
                 user.getPassword(),
                 user.getEmail()
         )).toList();
+        long durationMs = (System.nanoTime() - start)/1000000;
+        logger.info("Le nombre d'utilisateur dans la base de données est de {},durationMs = {}",listUsers.size(),durationMs);
+        return listUsers;
     }
 
     public void updateUserRole(UserUpdateRoleDto userInputDto){
-        UsersEntity user=this.usersRepository.findByEmail(userInputDto.email());
+        long start = System.nanoTime();
+        UsersEntity user=this.usersRepository.findByEmail(userInputDto.email()).orElseThrow(()->{
+            UsersUpdateRoleException exception = new UsersUpdateRoleException("Aucun users trouvés avec l'adresse mail "+userInputDto.email());
+            logger.error("Aucun users trouvés avec l'adresse mail {}",userInputDto.email(),exception);
+            return exception;
+        });
+
         final RoleEntity roleAdmin=new RoleEntity();
         roleAdmin.setLibelle(userInputDto.role());
         user.setRole(roleAdmin);
         usersRepository.save(user);
+        long durationMs = (System.nanoTime() - start)/1000000;
+        logger.info("Le role de l'utilisateur {} a bien été mis à jour, durationMs={}",userInputDto.email(),durationMs);
     }
 
     public UserOutputInfoUpdateDto updateUserInfo(Long idUser, UserInfoUpdateDto userInfoUpdate){
-        UsersEntity user = usersRepository.findById(idUser)
-                .orElseThrow(() -> new UsersUpdateException("L'utilisateur n'existe pas"));
+        long start = System.nanoTime();
+        UsersEntity user = usersRepository.findById(idUser).orElseThrow(() ->
+        {
+            UsersUpdateException exception = new UsersUpdateException("L'utilisateur n'existe pas avec l'id "+idUser);
+            logger.error("L'utilisateur n'existe pas avec l'id {}",idUser,exception);
+            return exception;
+        });
 
         if(userInfoUpdate.prenom()!=null&& !userInfoUpdate.prenom().isBlank()){
             user.setPrenom(userInfoUpdate.prenom());
@@ -157,6 +212,8 @@ public class UsersService implements UserDetailsService {
             user.setDeliveryAddress(userInfoUpdate.deliveryAddress());
         }
         UsersEntity savedUsers= usersRepository.save(user);
+        long durationMs=(System.nanoTime() - start)/1000000;
+        logger.info("L'utilisateur {} a bien été mise à jour, durationMs = {}",savedUsers.getId(),durationMs);
         return UserOutputInfoUpdateDto.builder()
                 .id(savedUsers.getId())
                 .nom(savedUsers.getNom())

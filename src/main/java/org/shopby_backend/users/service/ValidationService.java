@@ -1,24 +1,30 @@
 package org.shopby_backend.users.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.users.ValidationAccountException;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.ValidationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class ValidationService {
     public static final int BOUND = 99999;
     private ValidationRepository validationRepository;
     private NotificationService notificationService;
+    private static final Logger logger = LoggerFactory.getLogger(ValidationService.class);
 
     public void save(UsersEntity user) {
+        long start = System.nanoTime();
         Instant creationDate = Instant.now();
 
         Random random = new Random();
@@ -33,13 +39,19 @@ public class ValidationService {
                 .build();
         validationRepository.save(validationEntity);
         notificationService.sendRegistrationConfirmation(validationEntity);
+        long durationMs = (System.nanoTime()-start)/1000000;
+        logger.info("La validation de l'utilisateur {} a bien été effectué,durationMs = {}",code,durationMs);
     }
 
     public ValidationEntity readCode(String code){
-        ValidationEntity validation=validationRepository.findByCode(code);
-        if(validation==null){
-            throw new ValidationAccountException("Le code d'action n'est pas valide");
-        }
+        long start = System.nanoTime();
+        ValidationEntity validation=validationRepository.findByCode(code).orElseThrow(()->{
+            ValidationAccountException exception = new ValidationAccountException("Le code d'action n'est pas valide avec le code "+code);
+            logger.error("Le code d'action n'est pas valide avec le code {}",code);
+            return exception;
+        });
+        long durationMs = (System.nanoTime()-start)/1000000;
+        logger.info("Le code {} est bien présent dans la base de données, durationMs = {}",code,durationMs);
         return validation;
     }
 }

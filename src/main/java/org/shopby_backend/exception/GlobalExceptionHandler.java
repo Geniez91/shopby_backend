@@ -15,10 +15,13 @@ import org.shopby_backend.exception.order.OrderGetByUserIdException;
 import org.shopby_backend.exception.order.OrderGetException;
 import org.shopby_backend.exception.order.OrderUpdateException;
 import org.shopby_backend.exception.status.StatusCreateException;
+import org.shopby_backend.exception.status.StatusDeleteException;
+import org.shopby_backend.exception.status.StatusGetException;
 import org.shopby_backend.exception.typeArticle.TypeArticleAddException;
 import org.shopby_backend.exception.typeArticle.TypeArticleDeleteException;
 import org.shopby_backend.exception.typeArticle.TypeArticleGetException;
 import org.shopby_backend.exception.typeArticle.TypeArticleUpdateException;
+import org.shopby_backend.exception.users.NewPasswordException;
 import org.shopby_backend.exception.users.UsersCreateException;
 import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.exception.users.ValidationAccountException;
@@ -190,6 +193,24 @@ public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
 
     @ExceptionHandler(OrderGetByUserIdException.class)
     public ResponseEntity<ProblemDetail>catchOrderGetByUserIdException(OrderGetByUserIdException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(StatusDeleteException.class)
+    public ResponseEntity<ProblemDetail>catchStatusDeleteException(StatusDeleteException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(StatusGetException.class)
+    public ResponseEntity<ProblemDetail>catchStatusGetException(StatusGetException ex){
+        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+
+    @ExceptionHandler(NewPasswordException.class)
+    public ResponseEntity<ProblemDetail>catchNewPasswordException(NewPasswordException ex){
         ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
