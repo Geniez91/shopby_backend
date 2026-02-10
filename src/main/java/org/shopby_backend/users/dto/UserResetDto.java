@@ -1,4 +1,6 @@
 package org.shopby_backend.users.dto;
 
-public record UserResetDto(String email) {
+import jakarta.validation.constraints.NotBlank;
+
+public record UserResetDto(@NotBlank String email) {
 }

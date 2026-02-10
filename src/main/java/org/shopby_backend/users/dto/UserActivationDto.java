@@ -1,6 +1,7 @@
 package org.shopby_backend.users.dto;
 
-import org.shopby_backend.users.model.ValidationEntity;
 
-public record UserActivationDto(String code) {
+import jakarta.validation.constraints.NotBlank;
+
+public record UserActivationDto(@NotBlank String code) {
 }

@@ -1,9 +1,11 @@
 package org.shopby_backend.brand.controller;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.service.BrandService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,37 +13,43 @@ import java.util.List;
 
 @AllArgsConstructor
 @RestController
+@RequestMapping("/brand")
 public class BrandController {
     private BrandService brandService;
 
     @PreAuthorize("hasAnyAuthority('BRAND_CREATE')")
-    @PostMapping("/brand")
-    public BrandOutputDto addBrand(@RequestBody BrandInputDto brandInputDto){
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public BrandOutputDto addBrand(@Valid @RequestBody BrandInputDto brandInputDto){
         return brandService.addBrand(brandInputDto);
     }
 
     @PreAuthorize("hasAnyAuthority('BRAND_UPDATE')")
-    @PatchMapping("/brand/{brandId}")
-    public BrandOutputDto updateBrand(@PathVariable Long brandId,@RequestBody BrandInputDto brandInputDto){
+    @PatchMapping("/{brandId}")
+    @ResponseStatus(HttpStatus.OK)
+    public BrandOutputDto updateBrand(@PathVariable Long brandId,@Valid @RequestBody BrandInputDto brandInputDto){
         return brandService.updateBrand(brandId,brandInputDto);
     }
 
     @PreAuthorize("hasAnyAuthority('BRAND_READ_ALL')")
-    @GetMapping("/brand")
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public List<BrandOutputDto> getAllBrands(){
         return brandService.findAllBrands();
     }
 
     @PreAuthorize("hasAnyAuthority('BRAND_READ')")
-    @GetMapping("/brand/{brandId}")
+    @GetMapping("/{brandId}")
+    @ResponseStatus(HttpStatus.OK)
     public BrandOutputDto getBrand(@PathVariable Long brandId){
         return brandService.findBrandById(brandId);
     }
 
     @PreAuthorize("hasAnyAuthority('BRAND_DELETE')")
-    @DeleteMapping("/brand/{brandId}")
-    public BrandOutputDto deleteBrand(@PathVariable Long brandId){
-        return brandService.deleteBrand(brandId);
+    @DeleteMapping("/{brandId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBrand(@PathVariable Long brandId){
+         brandService.deleteBrand(brandId);
     }
 
 

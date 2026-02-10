@@ -1,4 +1,6 @@
 package org.shopby_backend.wishlist.dto;
 
-public record WishlistAddItemInputDto(Long idArticle) {
+import jakarta.validation.constraints.NotNull;
+
+public record WishlistAddItemInputDto(@NotNull Long idArticle) {
 }

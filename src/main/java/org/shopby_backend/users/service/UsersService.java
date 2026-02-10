@@ -3,6 +3,7 @@ package org.shopby_backend.users.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.users.*;
+import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.shopby_backend.users.dto.*;
 import org.shopby_backend.users.model.RoleEntity;
@@ -28,21 +29,20 @@ public class UsersService implements UserDetailsService {
     private UsersRepository usersRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private ValidationService validationService;
-    private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
 
     public UsersDto addUser(UserInputDto userInputDto) {
         long start = System.nanoTime();
         if(usersRepository.findByEmail(userInputDto.email()).isPresent()){
             String message = "Vos identifiants existe deja";
-            UsersCreateException exception = new UsersCreateException(message);
-            logger.error(message,exception);
+            UsersAlreadyExistsException exception = new UsersAlreadyExistsException(message);
+            log.warn(message,exception);
             throw exception;
         }
 
         if(!userInputDto.email().contains("@")){
             String message = "Votre email est invalide";
             UsersCreateException exception = new UsersCreateException(message);
-            logger.error(message,exception);
+            log.error(message,exception);
             throw exception;
         }
 
@@ -66,8 +66,8 @@ public class UsersService implements UserDetailsService {
             validationService.save(savedUser);
         }
 
-        long durationMs = (System.nanoTime() - start)/1000000;
-        logger.info("L'utilisateur {} a bien été ajouté, durationMs = {}",savedUser.getId(),durationMs);
+        long durationMs = Tools.getDurationMs(start);
+        log.info("L'utilisateur {} a bien été ajouté, durationMs = {}",savedUser.getId(),durationMs);
         return new UsersDto(
                 savedUser.getId(),
                 savedUser.getNom(),
@@ -83,21 +83,21 @@ public class UsersService implements UserDetailsService {
 
         if(Instant.now().isAfter(validation.getExpirationDate())){
             ValidationAccountException exception = new ValidationAccountException("Le code d'utilisateur a expiré le "+validation.getExpirationDate());
-            logger.error("Le code d'utilisateur a expiré le {}",validation.getExpirationDate(),exception);
+            log.warn("Le code d'utilisateur a expiré le {}",validation.getExpirationDate(),exception);
             throw exception;
         }
 
         UsersEntity userExist=this.usersRepository.findById(validation.getUser().getId()).orElseThrow(()->
         {
             ValidationAccountException exception = new ValidationAccountException("L'utilisateur n'existe pas avec l'id user "+validation.getUser().getId());
-            logger.error("L'utilisateur n'existe pas avec l'id user {}",validation.getUser().getId(),exception);
+            log.warn("L'utilisateur n'existe pas avec l'id user {}",validation.getUser().getId(),exception);
             return exception;
         });
 
         userExist.setEnabled(true);
         this.usersRepository.save(userExist);
-        long durationMs = (System.nanoTime() - start)/1000000;
-        logger.info("L'utilisateur {} a bien été activé, durationMs = {}",userExist.getId(),durationMs);
+        long durationMs = Tools.getDurationMs(start);
+        log.info("L'utilisateur {} a bien été activé, durationMs = {}",userExist.getId(),durationMs);
         return "L'utilisateur a bien été activé";
     }
 
@@ -107,12 +107,12 @@ public class UsersService implements UserDetailsService {
 
         UserDetails userDetails=usersRepository.findByEmail(email).orElseThrow(()->{
             UsernameNotFoundException exception = new UsernameNotFoundException("L'utilisateur n'existe pas avec l'email "+email);
-            logger.error("L'utilisateur n'existe pas avec l'email {}",email,exception);
+            log.warn("L'utilisateur n'existe pas avec l'email {}",email,exception);
             return exception;
         });
 
-        long durationMs = (System.nanoTime() - start)/1000000;
-        logger.info("L'utilisateur {} a bien été trouvé,durationMs = {}",userDetails.getUsername(),durationMs);
+        long durationMs = Tools.getDurationMs(start);
+        log.info("L'utilisateur {} a bien été trouvé,durationMs = {}",userDetails.getUsername(),durationMs);
         return userDetails;
     }
 
@@ -120,8 +120,8 @@ public class UsersService implements UserDetailsService {
         long start = System.nanoTime();
         UsersEntity user = (UsersEntity) this.loadUserByUsername(userResetDto.email());
         this.validationService.save(user);
-        long durationMs = (System.nanoTime() - start)/1000000;
-        logger.info("Le mot de passe a bien été reset avec l'email {},durationMs = {}",userResetDto.email(),durationMs);
+        long durationMs = Tools.getDurationMs(start);
+        log.info("Le mot de passe a bien été reset avec l'email {},durationMs = {}",userResetDto.email(),durationMs);
     }
 
     public void newPassword(UserNewPasswordDto userNewPasswordDto){
@@ -129,7 +129,7 @@ public class UsersService implements UserDetailsService {
         /// On recherche l'utilisateur par son adresse mail
         UsersEntity user=usersRepository.findByEmail(userNewPasswordDto.email()).orElseThrow(()->{
             NewPasswordException exception = new NewPasswordException("L'email ne correspond a aucun utilisateur avec l'email "+userNewPasswordDto.email());
-            logger.error("L'email ne correspond a aucun utilisateur avec l'email {}",userNewPasswordDto.email(),exception);
+            log.warn("L'email ne correspond a aucun utilisateur avec l'email {}",userNewPasswordDto.email(),exception);
             return exception;
         });
 
@@ -140,8 +140,8 @@ public class UsersService implements UserDetailsService {
             String passwordCrypted=bCryptPasswordEncoder.encode(userNewPasswordDto.password());
             user.setPassword(passwordCrypted);
             this.usersRepository.save(user);
-            long durationMs = (System.nanoTime() - start)/1000000;
-            logger.info("Le mot de passe de l'utilisateur a bien été changer avec l'email {}, durationMs = {}",userNewPasswordDto.email(),durationMs);
+            long durationMs = Tools.getDurationMs(start);
+            log.info("Le mot de passe de l'utilisateur a bien été changer avec l'email {}, durationMs = {}",userNewPasswordDto.email(),durationMs);
         }
     }
 
@@ -154,16 +154,16 @@ public class UsersService implements UserDetailsService {
                 user.getPassword(),
                 user.getEmail()
         )).toList();
-        long durationMs = (System.nanoTime() - start)/1000000;
-        logger.info("Le nombre d'utilisateur dans la base de données est de {},durationMs = {}",listUsers.size(),durationMs);
+        long durationMs = Tools.getDurationMs(start);
+        log.info("Le nombre d'utilisateur dans la base de données est de {},durationMs = {}",listUsers.size(),durationMs);
         return listUsers;
     }
 
     public void updateUserRole(UserUpdateRoleDto userInputDto){
         long start = System.nanoTime();
         UsersEntity user=this.usersRepository.findByEmail(userInputDto.email()).orElseThrow(()->{
-            UsersUpdateRoleException exception = new UsersUpdateRoleException("Aucun users trouvés avec l'adresse mail "+userInputDto.email());
-            logger.error("Aucun users trouvés avec l'adresse mail {}",userInputDto.email(),exception);
+            UsersNotFoundException exception = new UsersNotFoundException("Aucun users trouvés avec l'adresse mail "+userInputDto.email());
+            log.warn("Aucun users trouvés avec l'adresse mail {}",userInputDto.email(),exception);
             return exception;
         });
 
@@ -171,16 +171,16 @@ public class UsersService implements UserDetailsService {
         roleAdmin.setLibelle(userInputDto.role());
         user.setRole(roleAdmin);
         usersRepository.save(user);
-        long durationMs = (System.nanoTime() - start)/1000000;
-        logger.info("Le role de l'utilisateur {} a bien été mis à jour, durationMs={}",userInputDto.email(),durationMs);
+        long durationMs = Tools.getDurationMs(start);
+        log.info("Le role de l'utilisateur {} a bien été mis à jour, durationMs={}",userInputDto.email(),durationMs);
     }
 
     public UserOutputInfoUpdateDto updateUserInfo(Long idUser, UserInfoUpdateDto userInfoUpdate){
         long start = System.nanoTime();
         UsersEntity user = usersRepository.findById(idUser).orElseThrow(() ->
         {
-            UsersUpdateException exception = new UsersUpdateException("L'utilisateur n'existe pas avec l'id "+idUser);
-            logger.error("L'utilisateur n'existe pas avec l'id {}",idUser,exception);
+            UsersNotFoundException exception = new UsersNotFoundException("L'utilisateur n'existe pas avec l'id "+idUser);
+            log.warn("L'utilisateur n'existe pas avec l'id {}",idUser,exception);
             return exception;
         });
 
@@ -212,8 +212,8 @@ public class UsersService implements UserDetailsService {
             user.setDeliveryAddress(userInfoUpdate.deliveryAddress());
         }
         UsersEntity savedUsers= usersRepository.save(user);
-        long durationMs=(System.nanoTime() - start)/1000000;
-        logger.info("L'utilisateur {} a bien été mise à jour, durationMs = {}",savedUsers.getId(),durationMs);
+        long durationMs=Tools.getDurationMs(start);
+        log.info("L'utilisateur {} a bien été mise à jour, durationMs = {}",savedUsers.getId(),durationMs);
         return UserOutputInfoUpdateDto.builder()
                 .id(savedUsers.getId())
                 .nom(savedUsers.getNom())

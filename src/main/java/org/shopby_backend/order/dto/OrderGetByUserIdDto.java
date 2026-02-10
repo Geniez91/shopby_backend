@@ -1,4 +1,6 @@
 package org.shopby_backend.order.dto;
 
-public record OrderGetByUserIdDto(Long userId) {
+import jakarta.validation.constraints.NotNull;
+
+public record OrderGetByUserIdDto(@NotNull Long userId) {
 }

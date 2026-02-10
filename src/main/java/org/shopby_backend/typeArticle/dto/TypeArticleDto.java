@@ -1,4 +1,6 @@
 package org.shopby_backend.typeArticle.dto;
 
-public record TypeArticleDto(String libelle,Long parentId) {
+import jakarta.validation.constraints.NotBlank;
+
+public record TypeArticleDto(@NotBlank String libelle, Long parentId) {
 }

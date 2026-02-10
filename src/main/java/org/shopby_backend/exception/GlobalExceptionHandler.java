@@ -1,230 +1,207 @@
 package org.shopby_backend.exception;
 
-import org.apache.coyote.BadRequestException;
-import org.shopby_backend.exception.article.ArticleCreateException;
-import org.shopby_backend.exception.article.ArticleDeleteException;
-import org.shopby_backend.exception.article.ArticleGetException;
-import org.shopby_backend.exception.article.ArticleUpdateException;
+import org.shopby_backend.exception.article.*;
 import org.shopby_backend.exception.articlePhoto.ArticlePhotoUpload;
-import org.shopby_backend.exception.brand.BrandCreateException;
-import org.shopby_backend.exception.brand.BrandDeleteException;
-import org.shopby_backend.exception.brand.BrandGetException;
-import org.shopby_backend.exception.brand.BrandUpdateException;
-import org.shopby_backend.exception.order.OrderDeleteException;
-import org.shopby_backend.exception.order.OrderGetByUserIdException;
-import org.shopby_backend.exception.order.OrderGetException;
-import org.shopby_backend.exception.order.OrderUpdateException;
-import org.shopby_backend.exception.status.StatusCreateException;
-import org.shopby_backend.exception.status.StatusDeleteException;
-import org.shopby_backend.exception.status.StatusGetException;
-import org.shopby_backend.exception.typeArticle.TypeArticleAddException;
-import org.shopby_backend.exception.typeArticle.TypeArticleDeleteException;
-import org.shopby_backend.exception.typeArticle.TypeArticleGetException;
-import org.shopby_backend.exception.typeArticle.TypeArticleUpdateException;
-import org.shopby_backend.exception.users.NewPasswordException;
-import org.shopby_backend.exception.users.UsersCreateException;
-import org.shopby_backend.exception.users.UsersUpdateException;
-import org.shopby_backend.exception.users.ValidationAccountException;
+import org.shopby_backend.exception.brand.*;
+import org.shopby_backend.exception.order.*;
+import org.shopby_backend.exception.status.*;
+import org.shopby_backend.exception.typeArticle.*;
+import org.shopby_backend.exception.users.*;
 import org.shopby_backend.exception.wishlist.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-@ExceptionHandler(ValidationAccountException.class)
-public ResponseEntity<ProblemDetail>catchValidationAccount(UsersCreateException ex){
-    ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-}
+        /* =========================
+       ARTICLE EXCEPTIONS
+       ========================= */
 
-@ExceptionHandler(UsersCreateException.class)
-public ResponseEntity<ProblemDetail>catchBookCreation(UsersCreateException ex){
-  ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-  return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-}
-
-@ExceptionHandler(UsersUpdateException.class)
-    public ResponseEntity<ProblemDetail>catchUsersUpdate(UsersUpdateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    @ExceptionHandler(ArticleAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleArticleAlreadyExistsException(ArticleAlreadyExistsException ex) {
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
     }
-
 
     @ExceptionHandler(ArticleCreateException.class)
-    public ResponseEntity<ProblemDetail>catchArticleCreateException(ArticleCreateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    public ResponseEntity<ProblemDetail>handleArticleCreate(ArticleCreateException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
     }
+
+    @ExceptionHandler(ArticleNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleArticleNotFound(ArticleNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+    }
+
+
+        /* =========================
+       Brand EXCEPTIONS
+       ========================= */
+        @ExceptionHandler(BrandNotFoundException.class)
+        public ResponseEntity<ProblemDetail>handleBrandNotFound(BrandNotFoundException ex){
+            return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+        }
+
+
+
+        @ExceptionHandler(BrandAlreadyExistsException.class)
+        public ResponseEntity<ProblemDetail>handleBrandAlreadyExists(BrandAlreadyExistsException ex){
+            return buildProblemDetail(HttpStatus.CONFLICT,ex);
+        }
+
+
 
     @ExceptionHandler(BrandCreateException.class)
-    public ResponseEntity<ProblemDetail>catchBrandCreateException(BrandCreateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    public ResponseEntity<ProblemDetail>handleBrandCreate(BrandCreateException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
     }
 
+            /* =========================
+       Order EXCEPTIONS
+       ========================= */
 
-    @ExceptionHandler(BrandUpdateException.class)
-    public ResponseEntity<ProblemDetail>catchBrandUpdateException(BrandUpdateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleOrderNotFound(OrderNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
     }
-    @ExceptionHandler(BrandGetException.class)
-    public ResponseEntity<ProblemDetail>catchBrandGetException(BrandGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+
+    @ExceptionHandler(OrderItemNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleOrderItemNotFound(OrderItemNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
     }
-    @ExceptionHandler(BrandDeleteException.class)
-    public ResponseEntity<ProblemDetail>catchBrandDeleteException(BrandGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+
+    @ExceptionHandler(OrderCreateException.class)
+    public ResponseEntity<ProblemDetail>handleOrderCreate(OrderCreateException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+
+            /* =========================
+       Status EXCEPTIONS
+       ========================= */
+
+    @ExceptionHandler(StatusAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail>handleStatusAlreadyExists(StatusAlreadyExistsException ex){
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
+    }
+
+    @ExceptionHandler(StatusCreateException.class)
+    public ResponseEntity<ProblemDetail>handleStatusCreate(StatusCreateException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+
+    @ExceptionHandler(StatusNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleStatusNotFound(StatusNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+    }
+
+                /* =========================
+       Type Article EXCEPTIONS
+       ========================= */
+
+    @ExceptionHandler(TypeArticleNotFoundException.class)
+    public ResponseEntity<ProblemDetail>handleTypeArticleNotFound(TypeArticleNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+    }
+
+    @ExceptionHandler(TypeArticleAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail>handleTypeArticleAlreadyExists(TypeArticleAlreadyExistsException ex){
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
     }
 
     @ExceptionHandler(TypeArticleAddException.class)
-    public ResponseEntity<ProblemDetail>catchTypeArticleAddException(TypeArticleAddException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    public ResponseEntity<ProblemDetail>handleTypeArticleAdd(TypeArticleAddException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+                    /* =========================
+       Users EXCEPTIONS
+       ========================= */
+
+    @ExceptionHandler(UsersNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleUsersNotFound(UsersNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
     }
 
-    @ExceptionHandler(TypeArticleUpdateException.class)
-    public ResponseEntity<ProblemDetail>catchTypeArticleUpdateException(TypeArticleUpdateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    @ExceptionHandler(UsersAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail>handleUsersAlreadyExists(UsersAlreadyExistsException ex){
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
     }
 
-    @ExceptionHandler(TypeArticleDeleteException.class)
-    public ResponseEntity<ProblemDetail>catchTypeArticleDeleteException(TypeArticleDeleteException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(TypeArticleGetException.class)
-    public ResponseEntity<ProblemDetail>catchTypeArticleDeleteException(TypeArticleGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(ArticleUpdateException.class)
-    public ResponseEntity<ProblemDetail>catchArticleUpdateException(ArticleUpdateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(ArticleDeleteException.class)
-    public ResponseEntity<ProblemDetail>catchArticleDeleteException(ArticleDeleteException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(ArticleGetException.class)
-    public ResponseEntity<ProblemDetail>catchArticleGetException(ArticleGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(ArticlePhotoUpload.class)
-    public ResponseEntity<ProblemDetail>catchArticlePhotoUploadException(ArticlePhotoUpload ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-    @ExceptionHandler(WishlistCreateException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistCreateException(WishlistCreateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(WishlistUpdateException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistUpdateException(WishlistUpdateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-    @ExceptionHandler(WishlistGetException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistGetException(WishlistGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-    @ExceptionHandler(WishlistGetAllByUserIdException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistGetAllByUserIdException(WishlistGetAllByUserIdException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-    @ExceptionHandler(WishlistAddItemException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistAddItemException(WishlistAddItemException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-    @ExceptionHandler(WishlistRemoveItemException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistRemoveItemException(WishlistRemoveItemException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(WishlistGetAllArticleException.class)
-    public ResponseEntity<ProblemDetail>catchWishlistGetArticleException(WishlistGetAllArticleException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-    @ExceptionHandler(StatusCreateException.class)
-    public ResponseEntity<ProblemDetail>catchStatusCreateException(StatusCreateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(OrderUpdateException.class)
-    public ResponseEntity<ProblemDetail>catchOrderUpdateException(OrderUpdateException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(OrderDeleteException.class)
-    public ResponseEntity<ProblemDetail>catchOrderDeleteException(OrderDeleteException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(OrderGetException.class)
-    public ResponseEntity<ProblemDetail>catchOrderGetException(OrderGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(OrderGetByUserIdException.class)
-    public ResponseEntity<ProblemDetail>catchOrderGetByUserIdException(OrderGetByUserIdException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(StatusDeleteException.class)
-    public ResponseEntity<ProblemDetail>catchStatusDeleteException(StatusDeleteException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-    }
-
-    @ExceptionHandler(StatusGetException.class)
-    public ResponseEntity<ProblemDetail>catchStatusGetException(StatusGetException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    @ExceptionHandler(UsersCreateException.class)
+    public ResponseEntity<ProblemDetail>handleUsersCreate(UsersCreateException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
     }
 
     @ExceptionHandler(NewPasswordException.class)
-    public ResponseEntity<ProblemDetail>catchNewPasswordException(NewPasswordException ex){
-        ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    public ResponseEntity<ProblemDetail>handleNewPassword(NewPasswordException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+
+    @ExceptionHandler(ValidationAccountException.class)
+    public ResponseEntity<ProblemDetail>handleValidationAccount(ValidationAccountException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+
+                    /* =========================
+       Photo Article EXCEPTIONS
+       ========================= */
+
+    @ExceptionHandler(ArticlePhotoUpload.class)
+    public ResponseEntity<ProblemDetail>handleArticlePhotoUpload(ArticlePhotoUpload ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+
+                        /* =========================
+       Wishlist EXCEPTIONS
+       ========================= */
+    @ExceptionHandler(WishlistCreateException.class)
+    public ResponseEntity<ProblemDetail>handleWishlistCreate(WishlistCreateException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
+    }
+
+    @ExceptionHandler(WishlistAddItemException.class)
+    public ResponseEntity<ProblemDetail>handleWishlistAddItem(WishlistAddItemException ex){
+        return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
     }
 
 
+    @ExceptionHandler(WishlistItemAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail>handleWishlistItemAlreadyExists(WishlistItemAlreadyExistsException ex){
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
+    }
 
+    @ExceptionHandler(WishlistNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleWishlistNotFound(WishlistNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+    }
 
+    /* =========================
+       UTILS
+       ========================= */
+    private ResponseEntity<ProblemDetail> buildProblemDetail(HttpStatus status, Exception ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+        pd.setTitle(ex.getClass().getSimpleName());
+        return ResponseEntity.status(status).body(pd);
+    }
 
-
-    @ExceptionHandler(BadRequestException.class)
-public ResponseEntity<ProblemDetail> handleBadRequestException(BadRequestException ex){
-    ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
-}
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    private ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(MethodArgumentNotValidException ex){
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(err -> err.getField() + " : " + err.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                message
+        );
+        return ResponseEntity.badRequest().body(pd);
+    }
 
 @ExceptionHandler(Exception.class)
 public ResponseEntity<ProblemDetail> handleException(Exception ex){

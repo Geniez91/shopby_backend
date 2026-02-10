@@ -1,39 +1,47 @@
 package org.shopby_backend.status.controller;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
 import org.shopby_backend.status.service.StatusService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @AllArgsConstructor
 @RestController
+@RequestMapping("/status")
 public class StatusController {
     private StatusService statusService;
 
-    @PostMapping("/status")
-    public StatusOutputDto createStatus(@RequestBody StatusInputDto statusInputDto) {
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public StatusOutputDto createStatus(@Valid @RequestBody StatusInputDto statusInputDto) {
         return statusService.addNewStatus(statusInputDto);
     }
 
-    @PatchMapping("/status/{idStatus}")
-    public StatusOutputDto updateStatus(@PathVariable Long idStatus, @RequestBody StatusInputDto statusInputDto) {
+    @PatchMapping("/{idStatus}")
+    @ResponseStatus(HttpStatus.OK)
+    public StatusOutputDto updateStatus(@PathVariable Long idStatus, @Valid @RequestBody StatusInputDto statusInputDto) {
         return statusService.updateStatus(idStatus,statusInputDto);
     }
 
-    @DeleteMapping("/status/{idStatus}")
-    public StatusOutputDto updateStatus(@PathVariable Long idStatus) {
-        return statusService.deleteStatus(idStatus);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{idStatus}")
+    public void deleteStatus(@PathVariable Long idStatus) {
+         statusService.deleteStatus(idStatus);
     }
 
-    @GetMapping("/status/{idStatus}")
+    @GetMapping("/{idStatus}")
+    @ResponseStatus(HttpStatus.OK)
     public StatusOutputDto getStatusById(@PathVariable Long idStatus) {
         return statusService.getStatus(idStatus);
     }
 
-    @GetMapping("/status/")
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public List<StatusOutputDto> getAllStatus() {
         return statusService.getAllStatus();
     }

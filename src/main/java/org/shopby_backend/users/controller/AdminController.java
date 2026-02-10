@@ -7,10 +7,7 @@ import org.shopby_backend.users.dto.UsersOutput;
 import org.shopby_backend.users.service.UsersService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,18 +15,20 @@ import java.util.List;
 @EnableMethodSecurity
 @AllArgsConstructor
 @RestController
+@RequestMapping("/users")
 public class AdminController {
     private final UsersService usersService;
 
     @PreAuthorize("hasAnyAuthority('USER_READ_ALL')")
-    @GetMapping("/users")
+    @GetMapping
+
     public List<UsersOutput> findAllUsers(){
         return this.usersService.findAllUsers();
     }
 
 
     @PreAuthorize("hasAnyAuthority('USER_UPDATE_ROLE')")
-    @PutMapping("/users")
+    @PutMapping
     public void updateUserRole(@RequestBody UserUpdateRoleDto userInputDto){
         this.usersService.updateUserRole(userInputDto);
     }

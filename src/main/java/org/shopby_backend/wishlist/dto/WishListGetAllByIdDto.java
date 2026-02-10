@@ -1,4 +1,6 @@
 package org.shopby_backend.wishlist.dto;
 
-public record WishListGetAllByIdDto(Long userId) {
+import jakarta.validation.constraints.NotNull;
+
+public record WishListGetAllByIdDto(@NotNull Long userId) {
 }

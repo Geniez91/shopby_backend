@@ -1,54 +1,65 @@
 package org.shopby_backend.wishlist.controllers;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
 import org.shopby_backend.wishlist.dto.*;
 import org.shopby_backend.wishlist.service.WishlistService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @AllArgsConstructor
 @RestController
+@RequestMapping("/wishlist")
 public class WishlistController {
     private WishlistService wishlistService;
 
-    @PostMapping("/wishlist")
-    public WishlistOutputDto addNewWishlist(@RequestBody WishlistInputDto wishlistInputDto){
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public WishlistOutputDto addNewWishlist(@Valid @RequestBody WishlistInputDto wishlistInputDto){
         return wishlistService.addWishList(wishlistInputDto);
     }
 
-    @PatchMapping("/wishlist/{wishListId}")
-    public WishlistOutputDto updateNewWishlist(@PathVariable Integer wishListId, @RequestBody WishlistUpdateDto wishlistUpdateDto){
+    @PatchMapping("/{wishListId}")
+    @ResponseStatus(HttpStatus.OK)
+    public WishlistOutputDto updateNewWishlist(@PathVariable Integer wishListId, @Valid @RequestBody WishlistUpdateDto wishlistUpdateDto){
         return wishlistService.updateWishlist(wishListId,wishlistUpdateDto);
     }
 
-    @DeleteMapping("/wishlist/{wishListId}")
-    public WishlistOutputDto deleteWishlist(@PathVariable Integer wishListId){
-        return wishlistService.deleteWishlist(wishListId);
+    @DeleteMapping("/{wishListId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteWishlist(@PathVariable Integer wishListId){
+         wishlistService.deleteWishlist(wishListId);
     }
 
-    @GetMapping("/wishlist/{wishListId}")
+    @GetMapping("/{wishListId}")
+    @ResponseStatus(HttpStatus.OK)
     public WishlistOutputDto getWishlist(@PathVariable Integer wishListId){
         return wishlistService.getWishlist(wishListId);
     }
 
-    @GetMapping("/wishlist")
-    public List<WishlistOutputDto> getWishlists(@RequestBody WishListGetAllByIdDto wishListGetAllByIdDto){
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<WishlistOutputDto> getWishlists(@Valid @RequestBody WishListGetAllByIdDto wishListGetAllByIdDto){
         return wishlistService.getAllWishListByUserId(wishListGetAllByIdDto);
     }
 
-    @PostMapping("/wishlist/{wishlistId}")
-    public WishlistAddItemOutputDto addNewListItem(@PathVariable Long wishlistId,@RequestBody WishlistAddItemInputDto wishlistAddItemInputDto){
+    @PostMapping("/{wishlistId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public WishlistAddItemOutputDto addNewListItem(@PathVariable Long wishlistId,@Valid @RequestBody WishlistAddItemInputDto wishlistAddItemInputDto){
         return wishlistService.addWishListItem(wishlistId,wishlistAddItemInputDto);
     }
 
-    @DeleteMapping("/wishlist/{wishlistId}")
-    public WishlistAddItemOutputDto deleteWishlistItem(@PathVariable Long wishlistId,@RequestBody WishlistAddItemInputDto wishlistAddItemInputDto){
-        return wishlistService.deleteWishlistItem(wishlistId,wishlistAddItemInputDto);
+    @DeleteMapping("/{wishlistId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteWishlistItem(@PathVariable Long wishlistId,@Valid @RequestBody WishlistAddItemInputDto wishlistAddItemInputDto){
+         wishlistService.deleteWishlistItem(wishlistId,wishlistAddItemInputDto);
     }
 
-    @GetMapping("/wishlist/{wishlistId}")
+    @GetMapping("{wishlistId}")
+    @ResponseStatus(HttpStatus.OK)
     public List<AddArticleOutputDto> getAllArticlesByWishlistId(@PathVariable Long wishlistId){
         return wishlistService.getAllArticleByWishlistId(wishlistId);
     }

@@ -1,5 +1,6 @@
 package org.shopby_backend.users.controller;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.jwt.service.JwtService;
@@ -26,20 +27,21 @@ public class UsersController {
     private final JwtService jwtService;
 
     @PostMapping("/register")
-    public UsersDto addUser(@RequestBody UserInputDto userInputDto){
+    @ResponseStatus(HttpStatus.CREATED)
+    public UsersDto addUser(@Valid @RequestBody UserInputDto userInputDto){
         return usersService.addUser(userInputDto);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+
     @PostMapping("/activation")
-    public String activateUser(@RequestBody UserActivationDto userActivationDto){
+    @ResponseStatus(HttpStatus.CREATED)
+    public String activateUser(@Valid @RequestBody UserActivationDto userActivationDto){
     return this.usersService.activationUser(userActivationDto.code());
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @PostMapping("/login")
-    public Map<String, String> loginUser(@RequestBody UserLoginDto userInputDto) {
-
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, String> loginUser(@Valid @RequestBody UserLoginDto userInputDto) {
         try {
             Authentication authentication =
                     authenticationManager.authenticate(
@@ -48,30 +50,28 @@ public class UsersController {
                                     userInputDto.password()
                             )
                     );
-
             return jwtService.generateToken(userInputDto.email());
-
         } catch (Exception e) {
             log.error("Erreur d'authentification", e);
             throw new RuntimeException("Email ou mot de passe incorrect");
         }
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/logOut")
     public void logOut(){
         this.jwtService.logOut();
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/reset-password")
-    public void resetPassword(@RequestBody UserResetDto userResetDto){
+    public void resetPassword(@Valid @RequestBody UserResetDto userResetDto){
         usersService.resetPassword(userResetDto);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/new-password")
-    public void newPassword(@RequestBody UserNewPasswordDto userNewPasswordDto){
+    public void newPassword(@Valid @RequestBody UserNewPasswordDto userNewPasswordDto){
         usersService.newPassword(userNewPasswordDto);
     }
     @PreAuthorize("hasAnyAuthority('USER_UPDATE')")

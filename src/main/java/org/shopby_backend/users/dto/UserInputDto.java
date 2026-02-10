@@ -1,4 +1,6 @@
 package org.shopby_backend.users.dto;
 
-public record UserInputDto(String prenom,String nom,String password,String email,String country) {
+import jakarta.validation.constraints.NotBlank;
+
+public record UserInputDto(@NotBlank String prenom, @NotBlank String nom, @NotBlank String password, @NotBlank String email, @NotBlank String country) {
 }

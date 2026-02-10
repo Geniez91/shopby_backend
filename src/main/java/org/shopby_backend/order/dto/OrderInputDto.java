@@ -1,11 +1,11 @@
 package org.shopby_backend.order.dto;
 
-import org.shopby_backend.article.model.ArticleEntity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.shopby_backend.order.model.OrderQuantity;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
-public record OrderInputDto(String deliveryAddress, BigDecimal totalPrice, Long idUser, List<OrderQuantity> articlesQuantity) {
+public record OrderInputDto(@NotBlank String deliveryAddress, @NotNull BigDecimal totalPrice, @NotNull Long idUser, @NotNull List<OrderQuantity> articlesQuantity) {
 }
