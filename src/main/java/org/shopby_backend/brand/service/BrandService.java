@@ -8,6 +8,7 @@ import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.*;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +25,12 @@ public class BrandService {
     public BrandOutputDto addBrand(BrandInputDto brandInputDto) {
         long start = System.nanoTime();
 
-        brandRepository.findByLibelle(brandInputDto.libelle()).orElseThrow(()->{
-            BrandAlreadyExistsException exception = new BrandAlreadyExistsException("Le libelle de votre marque existe deja "+brandInputDto.libelle());
-            log.warn("Le libelle de votre marque existe deja {}",brandInputDto.libelle(),exception);
-            return exception;
-        });
+        if(brandRepository.existsByLibelle(brandInputDto.libelle()))
+        {
+            BrandAlreadyExistsException exception = new BrandAlreadyExistsException(brandInputDto.libelle());
+            log.warn(LogMessages.BRAND_ALREADY_EXISTS,brandInputDto.libelle(),exception);
+            throw exception;
+        };
 
         BrandEntity brandEntity=BrandEntity.builder()
                 .libelle(brandInputDto.libelle())
@@ -49,8 +51,8 @@ public class BrandService {
         }
 
         BrandEntity existBrand = brandRepository.findByIdBrand(id).orElseThrow(()->{
-            BrandNotFoundException exception = new BrandNotFoundException("L'identifiant de la marque n'existe pas "+id);
-            log.warn("L'identifiant de la marque n'existe pas {}",id,exception);
+            BrandNotFoundException exception = new BrandNotFoundException(id);
+            log.warn(LogMessages.BRAND_NOT_FOUND,id,exception);
             return exception;
         });
 
@@ -76,8 +78,8 @@ public class BrandService {
     public BrandOutputDto findBrandById(Long id) {
         long start = System.nanoTime();
         BrandEntity brandEntity = brandRepository.findByIdBrand(id).orElseThrow(()->{
-            BrandNotFoundException exception = new BrandNotFoundException("L'identifiant de la marque n'existe pas "+id);
-            log.warn("L'identifiant de la marque n'existe pas {}",id,exception);
+            BrandNotFoundException exception = new BrandNotFoundException(id);
+            log.warn(LogMessages.BRAND_NOT_FOUND,id,exception);
             return exception;
         });
         long durationMs = Tools.getDurationMs(start);
@@ -88,8 +90,8 @@ public class BrandService {
     public void deleteBrand(Long id) {
         long start = System.nanoTime();
         BrandEntity brandEntity = brandRepository.findByIdBrand(id).orElseThrow(()->{
-            BrandNotFoundException exception = new BrandNotFoundException("L'id saisie ne correspond à aucune marque "+id);
-            log.warn("L'id saisie ne correspond à aucune marque {}",id,exception );
+            BrandNotFoundException exception = new BrandNotFoundException(id);
+            log.warn(LogMessages.BRAND_NOT_FOUND,id,exception );
             return exception;
         });
         brandRepository.delete(brandEntity);

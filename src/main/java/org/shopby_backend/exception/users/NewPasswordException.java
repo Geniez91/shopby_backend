@@ -1,7 +1,10 @@
 package org.shopby_backend.exception.users;
 
-public class NewPasswordException extends RuntimeException {
-    public NewPasswordException(String message) {
-        super(message);
+import org.shopby_backend.exception.BusinessException;
+
+public class NewPasswordException extends BusinessException {
+    public NewPasswordException(String email) {
+
+        super("L'email ne correspond a aucun utilisateur avec l'email "+email);
     }
 }

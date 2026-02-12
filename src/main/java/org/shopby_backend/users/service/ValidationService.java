@@ -3,6 +3,9 @@ package org.shopby_backend.users.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.users.ValidationAccountException;
+import org.shopby_backend.exception.users.ValidationNotFoundException;
+import org.shopby_backend.tools.LogMessages;
+import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.ValidationRepository;
@@ -39,18 +42,18 @@ public class ValidationService {
                 .build();
         validationRepository.save(validationEntity);
         notificationService.sendRegistrationConfirmation(validationEntity);
-        long durationMs = (System.nanoTime()-start)/1000000;
+        long durationMs = Tools.getDurationMs(start);;
         logger.info("La validation de l'utilisateur {} a bien été effectué,durationMs = {}",code,durationMs);
     }
 
     public ValidationEntity readCode(String code){
         long start = System.nanoTime();
         ValidationEntity validation=validationRepository.findByCode(code).orElseThrow(()->{
-            ValidationAccountException exception = new ValidationAccountException("Le code d'action n'est pas valide avec le code "+code);
-            logger.error("Le code d'action n'est pas valide avec le code {}",code);
+            ValidationNotFoundException exception = new ValidationNotFoundException(code);
+            logger.error(LogMessages.VALIDATION_NOT_FOUND_BY_CODE,code);
             return exception;
         });
-        long durationMs = (System.nanoTime()-start)/1000000;
+        long durationMs = Tools.getDurationMs(start);;
         logger.info("Le code {} est bien présent dans la base de données, durationMs = {}",code,durationMs);
         return validation;
     }

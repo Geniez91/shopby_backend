@@ -6,7 +6,8 @@ import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.articlePhoto.dto.ArticlePhotoOutputDto;
 import org.shopby_backend.articlePhoto.model.ArticlePhotoEntity;
 import org.shopby_backend.articlePhoto.persistence.ArticlePhotoRepository;
-import org.shopby_backend.exception.articlePhoto.ArticlePhotoUpload;
+import org.shopby_backend.exception.article.ArticleNotFoundException;
+import org.shopby_backend.exception.articlePhoto.ArticlePhotoUploadException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,9 +22,9 @@ public class ArticlePhotoService {
     private LocalStorageService localStorageService;
 
     public List<ArticlePhotoOutputDto> uploadPhotos(Long articleId,List<MultipartFile> files){
-        ArticleEntity articleEntity=articleRepository.findById(articleId).orElseThrow(()->new ArticlePhotoUpload("Article Introuvable"));
+        ArticleEntity articleEntity=articleRepository.findById(articleId).orElseThrow(()->new ArticleNotFoundException(articleId));
         if(files==null|| files.isEmpty()){
-            throw new ArticlePhotoUpload("Aucun fichiers n'a été transmis");
+            throw new ArticlePhotoUploadException("Aucun fichiers n'a été transmis");
         }
         int startPosition=articlePhotoRepository.findMaxPositionByArticleId(articleId).orElse(0)+1;
 

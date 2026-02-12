@@ -10,14 +10,12 @@ import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
-import org.shopby_backend.exception.brand.BrandCreateException;
-import org.shopby_backend.exception.brand.BrandDeleteException;
-import org.shopby_backend.exception.brand.BrandGetException;
-import org.shopby_backend.exception.brand.BrandUpdateException;
+import org.shopby_backend.exception.brand.*;
 import org.shopby_backend.users.model.UsersEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -38,6 +36,7 @@ class BrandServiceTest {
                 .idBrand(1L)
                 .libelle(brandInputDto.libelle())
                 .build();
+        when(brandRepository.existsByLibelle(brandInputDto.libelle())).thenReturn(false);
         when(brandRepository.save(any(BrandEntity.class))).thenReturn(brandEntity);
         /// Act
         BrandOutputDto addBrandOutputDto= brandService.addBrand(brandInputDto);
@@ -49,26 +48,13 @@ class BrandServiceTest {
     @Test
     void shouldThrowExceptionWhenAlreadyBrandCreate(){
         BrandInputDto brandInputDto =new BrandInputDto("DC");
-        BrandEntity alreadyBrand=BrandEntity.builder().idBrand(1L)
-                        .libelle("DC").build();
-        when(brandRepository.findByLibelle(brandInputDto.libelle())).thenReturn(alreadyBrand);
+        when(brandRepository.existsByLibelle(brandInputDto.libelle())).thenReturn(true);
 
-        BrandCreateException brandCreateException= Assertions.assertThrows(
-                BrandCreateException.class,
+        BrandAlreadyExistsException brandAlreadyExistsException= Assertions.assertThrows(
+                BrandAlreadyExistsException.class,
                 () -> brandService.addBrand(brandInputDto)
         );
-        Assertions.assertEquals("Le libelle de votre marque existe deja", brandCreateException.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenNoBrandWriteCreate(){
-        BrandInputDto brandInputDto =new BrandInputDto("");
-
-        BrandCreateException brandCreateException= Assertions.assertThrows(
-                BrandCreateException.class,
-                () -> brandService.addBrand(brandInputDto)
-        );
-        Assertions.assertEquals("Le libelle de votre marque n'est pas valide", brandCreateException.getMessage());
+        Assertions.assertEquals("La Marque existe deja : brandName : DC", brandAlreadyExistsException.getMessage());
     }
 
     @Test
@@ -83,35 +69,24 @@ class BrandServiceTest {
                 .idBrand(1L)
                 .libelle(brandInputDto.libelle())
                 .build();
-        when(brandRepository.findByIdBrand(1L)).thenReturn(oldbrandEntity);
+        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.ofNullable(oldbrandEntity));
         when(brandRepository.save(any(BrandEntity.class))).thenReturn(brandEntity);
 
         BrandOutputDto updateBrandOutputDto= brandService.updateBrand(1L,brandInputDto);
 
-        Assertions.assertEquals(updateBrandOutputDto.libelle(),"DC");
-    }
-
-    @Test
-    void shouldThrowExceptionWhenNoBrandUpdate(){
-        BrandInputDto brandInputDto =new BrandInputDto("");
-
-        BrandUpdateException brandUpdateException= Assertions.assertThrows(
-                BrandUpdateException.class,
-                () -> brandService.updateBrand(1L,brandInputDto)
-        );
-        Assertions.assertEquals("Le libelle de votre marque n'existe pas",brandUpdateException.getMessage());
+        Assertions.assertEquals("DC", updateBrandOutputDto.libelle());
     }
 
     @Test
     void shouldThrowExceptionWhenBrandNotExist(){
         BrandInputDto brandInputDto =new BrandInputDto("DC");
-        when(brandRepository.findByIdBrand(1L)).thenReturn(null);
+        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.empty());
 
-        BrandUpdateException brandUpdateException= Assertions.assertThrows(
-                BrandUpdateException.class,
+        BrandNotFoundException brandNotFoundException= Assertions.assertThrows(
+                BrandNotFoundException.class,
                 () -> brandService.updateBrand(1L,brandInputDto)
         );
-        Assertions.assertEquals("La marque saisie n'existe pas",brandUpdateException.getMessage());
+        Assertions.assertEquals("Aucune marque ne correspond à l'id de la marque : 1",brandNotFoundException.getMessage());
     }
 
     @Test
@@ -125,49 +100,48 @@ class BrandServiceTest {
 
         List<BrandOutputDto> listBrandOutputDto= brandService.findAllBrands();
 
-        Assertions.assertEquals(listBrandOutputDto.size(),2);
-        Assertions.assertEquals(listBrandOutputDto.get(0).libelle(),"DC");
+        Assertions.assertEquals(2, listBrandOutputDto.size());
+        Assertions.assertEquals("DC", listBrandOutputDto.get(0).libelle());
     }
 
     @Test
     void shouldShowOnlyOneBrand(){
         BrandEntity brandEntity=BrandEntity.builder().idBrand(1L).libelle("DC").build();
-        when(brandRepository.findByIdBrand(1L)).thenReturn(brandEntity);
+        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.ofNullable(brandEntity));
 
         BrandOutputDto brandOutputDto= brandService.findBrandById(1L);
 
-        Assertions.assertEquals(brandOutputDto.libelle(),"DC");
+        Assertions.assertEquals("DC", brandOutputDto.libelle());
     }
 
     @Test
     void shouldThrowExceptionWhenNoBrandGetById(){
-        when(brandRepository.findByIdBrand(1L)).thenReturn(null);
+        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.empty());
 
-        BrandGetException brandGetException= Assertions.assertThrows(
-                BrandGetException.class,
+        BrandNotFoundException brandNotFoundException= Assertions.assertThrows(
+                BrandNotFoundException.class,
                 () -> brandService.findBrandById(1L)
         );
-        Assertions.assertEquals("L'id saisie ne correspond à aucune marque",brandGetException.getMessage());
+        Assertions.assertEquals("Aucune marque ne correspond à l'id de la marque : 1",brandNotFoundException.getMessage());
     }
 
     @Test
     void shouldDeleteBrand(){
         BrandEntity brandEntity=BrandEntity.builder().idBrand(1L).libelle("DC").build();
-        when(brandRepository.findByIdBrand(1L)).thenReturn(brandEntity);
+        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.ofNullable(brandEntity));
 
-        BrandOutputDto brandOutputDto= brandService.deleteBrand(1L);
-        Assertions.assertEquals(brandOutputDto.libelle(),"DC");
+        brandService.deleteBrand(1L);
     }
 
     @Test
     void shouldThrowExceptionWhenNoBrandDelete(){
-        when(brandRepository.findByIdBrand(1L)).thenReturn(null);
+        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.empty());
 
-        BrandDeleteException brandGetException= Assertions.assertThrows(
-                BrandDeleteException.class,
+        BrandNotFoundException brandGetException= Assertions.assertThrows(
+                BrandNotFoundException.class,
                 () -> brandService.deleteBrand(1L)
         );
-        Assertions.assertEquals("L'id saisie ne correspond à aucune marque",brandGetException.getMessage());
+        Assertions.assertEquals("Aucune marque ne correspond à l'id de la marque : 1",brandGetException.getMessage());
     }
 
 

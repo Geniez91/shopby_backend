@@ -10,6 +10,7 @@ import org.shopby_backend.exception.article.*;
 import org.shopby_backend.exception.brand.BrandNotFoundException;
 import org.shopby_backend.exception.typeArticle.TypeArticleNotFoundException;
 import org.shopby_backend.order.service.OrderService;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
@@ -34,23 +35,22 @@ public class ArticleService {
     public AddArticleOutputDto addNewArticle(AddArticleInputDto addArticleInputDto){
         long start = System.nanoTime();
         if(articleRepository.existsByName(addArticleInputDto.nameArticle())){
-            String message = "L'article existe deja";
-            ArticleAlreadyExistsException exception = new ArticleAlreadyExistsException(message);
-            log.warn(message,exception);
+            ArticleAlreadyExistsException exception = new ArticleAlreadyExistsException(addArticleInputDto.nameArticle());
+            log.warn(LogMessages.ARTICLE_ALREADY_EXISTS,addArticleInputDto.nameArticle());
             throw exception;
         }
 
         BrandEntity brandEntity = brandRepository.findById(addArticleInputDto.idBrand()).orElseThrow(()->
         {
-            BrandNotFoundException exception = new BrandNotFoundException("La Marque est introuvable " +addArticleInputDto.idBrand());
-            log.warn("La Marque est introuvable {}",addArticleInputDto.idBrand(),exception );
+            BrandNotFoundException exception = new BrandNotFoundException(addArticleInputDto.idBrand());
+            log.warn(LogMessages.BRAND_NOT_FOUND,addArticleInputDto.idBrand());
             return exception;
         });
 
         TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(addArticleInputDto.idType()).orElseThrow(()->
         {
-            TypeArticleNotFoundException exception = new TypeArticleNotFoundException("Le Type d'article est introuvable "+addArticleInputDto.idType());
-            log.warn("Le Type d'article est introuvable {}",addArticleInputDto.idType(),exception );
+            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(addArticleInputDto.idType());
+            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,addArticleInputDto.idType(),exception );
             return exception;
         });
 
@@ -64,7 +64,14 @@ public class ArticleService {
 
         ArticleEntity savedArticle = articleRepository.save(article);
         long durationMs = Tools.getDurationMs(start);
-        log.info("L'article {} a bien été ajouté avec le nom {}, la description {}, le prix {}, la marque {}, le type d'article {}, durationMs : {}",savedArticle.getIdArticle(),savedArticle.getName(),savedArticle.getDescription(),savedArticle.getPrice(), brandEntity.getLibelle(),typeArticleEntity.getLibelle(),durationMs);
+        log.info("L'article {} a bien été ajouté avec le nom {}, la description {}, le prix {}, la marque {}, le type d'article {}, durationMs : {}",
+                savedArticle.getIdArticle(),
+                savedArticle.getName(),
+                savedArticle.getDescription(),
+                savedArticle.getPrice(),
+                brandEntity.getLibelle(),
+                typeArticleEntity.getLibelle(),
+                durationMs);
 
         return new AddArticleOutputDto(
                 savedArticle.getIdArticle(),
@@ -80,8 +87,8 @@ public class ArticleService {
     public AddArticleOutputDto updateArticle(Long id,AddArticleInputDto addArticleInputDto){
         long start = System.nanoTime();
         ArticleEntity articleEntity = articleRepository.findById(id).orElseThrow(()->{
-            ArticleNotFoundException exception = new ArticleNotFoundException("Aucun article ne corresond à votre id d'article "+id);
-            log.warn("Aucun article ne corresond à votre id d'article {}",id,exception );
+            ArticleNotFoundException exception = new ArticleNotFoundException(id);
+            log.warn(LogMessages.ARTICLE_NOT_FOUND,id );
             return exception;
         });
 
@@ -100,8 +107,8 @@ public class ArticleService {
         if(addArticleInputDto.idBrand()!=null){
             if(!Objects.equals(articleEntity.getBrand().getIdBrand(), addArticleInputDto.idBrand())){
                 BrandEntity brandEntity= brandRepository.findByIdBrand(addArticleInputDto.idBrand()).orElseThrow(()->{
-                    BrandNotFoundException exception = new BrandNotFoundException("Aucune Marque ne correspond à l'id de marque de brand saisie");
-                    log.warn("Aucune Marque ne correspond à l'id de marque de brand saisie {}", addArticleInputDto.idBrand(),exception);
+                    BrandNotFoundException exception = new BrandNotFoundException(addArticleInputDto.idBrand());
+                    log.warn(LogMessages.BRAND_NOT_FOUND, addArticleInputDto.idBrand());
                     return exception;
                 });
                 articleEntity.setBrand(brandEntity);
@@ -111,8 +118,8 @@ public class ArticleService {
             if(!Objects.equals(articleEntity.getTypeArticle().getIdTypeArticle(), addArticleInputDto.idType())){
                 TypeArticleEntity type=typeArticleRepository.findById(addArticleInputDto.idType()).orElseThrow(()->
                 {
-                    TypeArticleNotFoundException exception = new TypeArticleNotFoundException("Aucun type ne correspond à l'id de type saisie "+addArticleInputDto.idType());
-                    log.warn("Aucun type ne correspond à l'id de type saisie {}",addArticleInputDto.idType(),exception);
+                    TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(addArticleInputDto.idType());
+                    log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,addArticleInputDto.idType(),exception);
                     return exception;
                 });
                     articleEntity.setTypeArticle(type);
@@ -120,7 +127,7 @@ public class ArticleService {
         }
         ArticleEntity updatedArticle=articleRepository.save(articleEntity);
         long durationMs = Tools.getDurationMs(start);
-        log.warn("L'article {} a bien été mise à jour,durationMs={}",updatedArticle.getIdArticle(),durationMs);
+        log.info("L'article {} a bien été mise à jour,durationMs={}",updatedArticle.getIdArticle(),durationMs);
         return new AddArticleOutputDto(updatedArticle.getIdArticle(),updatedArticle.getName(),updatedArticle.getDescription(),updatedArticle.getPrice(),updatedArticle.getBrand().getLibelle(),updatedArticle.getTypeArticle().getLibelle(),updatedArticle.getCreationDate());
     }
 
@@ -128,8 +135,8 @@ public class ArticleService {
         long start = System.nanoTime();
         ArticleEntity articleEntity=articleRepository.findById(id).orElseThrow(()->
         {
-            ArticleNotFoundException exception = new ArticleNotFoundException("Aucun article ne correspond à l'id de l'article "+id);
-            log.warn("Aucun article ne correspond à l'id de l'article {}",id,exception);
+            ArticleNotFoundException exception = new ArticleNotFoundException(id);
+            log.warn(LogMessages.ARTICLE_NOT_FOUND,id,exception);
             return exception;
         });
         articleRepository.delete(articleEntity);
@@ -148,8 +155,8 @@ public class ArticleService {
     public AddArticleOutputDto getArticleById(Long id){
         long start = System.nanoTime();
         ArticleEntity articleEntity=articleRepository.findById(id).orElseThrow(()->{
-            ArticleNotFoundException exception = new ArticleNotFoundException("Aucun article ne correspond à l'id de l'article "+id);
-            log.warn("Aucun article ne correspond à l'id de l'article {}",id,exception);
+            ArticleNotFoundException exception = new ArticleNotFoundException(id);
+            log.warn(LogMessages.ARTICLE_NOT_FOUND,id,exception);
             return exception;
         });
         long durationMs = Tools.getDurationMs(start);

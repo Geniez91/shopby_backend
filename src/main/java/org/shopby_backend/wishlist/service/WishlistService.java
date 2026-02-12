@@ -8,6 +8,7 @@ import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.exception.article.ArticleNotFoundException;
 import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.exception.wishlist.*;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
@@ -39,8 +40,8 @@ public class WishlistService {
 
         UsersEntity user= usersRepository.findById(wishlistInputDto.userId()).orElseThrow(()->
                 {
-                    UsersNotFoundException exception = new UsersNotFoundException("Aucun utilisateur ne correspond à l'id saisie " + wishlistInputDto.userId());
-                    logger.warn("Aucun utilisateur ne correspond à l'id saisie {}", wishlistInputDto.userId(), exception);
+                    UsersNotFoundException exception = UsersNotFoundException.byUserId(wishlistInputDto.userId());
+                    logger.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID, wishlistInputDto.userId(), exception);
                     return exception;
                 }
             );
@@ -60,8 +61,8 @@ public class WishlistService {
         long start = System.nanoTime();
         WishlistEntity wishlistEntity= wishlistRepository.findById(idWishList).orElseThrow(()->
         {
-            WishlistNotFoundException exception = new WishlistNotFoundException("L'id de la liste d'envie ne correspond a aucun liste avec l'id "+idWishList);
-            logger.warn("L'id de la liste d'envie ne correspond a aucun liste avec l'id {}",idWishList, exception);
+            WishlistNotFoundException exception = new WishlistNotFoundException(idWishList);
+            logger.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,idWishList, exception);
             return exception;
         });
 
@@ -83,8 +84,8 @@ public class WishlistService {
         long start = System.nanoTime();
         WishlistEntity wishlistEntity= wishlistRepository.findById(idWishList).orElseThrow(()->
         {
-            WishlistNotFoundException exception =  new WishlistNotFoundException("L'id de la liste d'envie ne correspond a aucun liste avec l'id "+idWishList);
-            logger.warn("L'id de la liste d'envie ne correspond a aucun liste avec l'id {}",idWishList, exception);
+            WishlistNotFoundException exception =  new WishlistNotFoundException(idWishList);
+            logger.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,idWishList, exception);
             return exception;
         });
         wishlistRepository.delete(wishlistEntity);
@@ -96,8 +97,8 @@ public class WishlistService {
         long start = System.nanoTime();
        WishlistEntity wishlistEntity=wishlistRepository.findById(idWishList).orElseThrow(()->
        {
-           WishlistNotFoundException exception = new WishlistNotFoundException("L'id de la liste d'envie ne correspond a aucun liste avec l'id "+idWishList);
-           logger.warn("L'id de la liste d'envie ne correspond a aucun liste avec l'id {}",idWishList, exception);
+           WishlistNotFoundException exception = new WishlistNotFoundException(idWishList);
+           logger.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,idWishList, exception);
            return exception;
        });
        long durationMs = Tools.getDurationMs(start);
@@ -110,8 +111,8 @@ public class WishlistService {
 
         UsersEntity user=usersRepository.findById(wishListGetAllByIdDto.userId()).orElseThrow(()->
         {
-            WishlistNotFoundException exception = new WishlistNotFoundException("L'id de l'utilisateur ne correspond à aucun utilisateur avec id "+wishListGetAllByIdDto.userId());
-            logger.warn("L'id de l'utilisateur ne correspond à aucun utilisateur avec id {}",wishListGetAllByIdDto.userId(),exception);
+            UsersNotFoundException exception = UsersNotFoundException.byUserId(wishListGetAllByIdDto.userId());
+            logger.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,wishListGetAllByIdDto.userId(),exception);
             return exception;
         });
 
@@ -132,23 +133,23 @@ public class WishlistService {
 
         WishlistEntity wishlistEntity=wishlistRepository.findById(Math.toIntExact(idWishList)).orElseThrow(()->
         {
-            WishlistNotFoundException exception = new WishlistNotFoundException("L'id de la liste d'envie ne correpond a aucune liste d'envie avec l'id "+idWishList);
-            logger.warn("L'id de la liste d'envie ne correpond a aucune liste d'envie avec l'id {}",idWishList,exception);
+            WishlistNotFoundException exception = new WishlistNotFoundException(Math.toIntExact(idWishList));
+            logger.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,idWishList,exception);
             return exception;
         });
 
         ArticleEntity articleEntity=articleRepository.findById(wishlistAddItemInputDto.idArticle()).orElseThrow(()->
         {
-            ArticleNotFoundException exception = new ArticleNotFoundException("L'id de l'article ne correpond a aucun article avec l'id article "+wishlistAddItemInputDto.idArticle());
-            logger.warn("L'id de l'article ne correpond a aucun article avec l'id article {}",wishlistAddItemInputDto.idArticle(),exception);
+            ArticleNotFoundException exception = new ArticleNotFoundException(wishlistAddItemInputDto.idArticle());
+            logger.warn(LogMessages.ARTICLE_NOT_FOUND,wishlistAddItemInputDto.idArticle(),exception);
             return exception;
         });
 
-        wishlistItemRepository.findByWishlist_idWishlistAndArticle_idArticle(idWishList, wishlistAddItemInputDto.idArticle()).orElseThrow(()-> {
-            WishlistItemAlreadyExistsException exception = new WishlistItemAlreadyExistsException("L'article est deja dans votre liste d'envie avec l'id wishlist "+idWishList + "et l'id article : "+wishlistAddItemInputDto.idArticle());
-            logger.warn("L'article est deja dans votre liste d'envie avec l'id wishlist {} et l'id article : {}",idWishList,wishlistAddItemInputDto.idArticle(),exception);
-            return exception;
-        });
+        if(wishlistItemRepository.existsByWishlist_IdWishlistAndArticle_IdArticle(idWishList, wishlistAddItemInputDto.idArticle())){
+            WishlistItemAlreadyExistsException exception = new WishlistItemAlreadyExistsException(idWishList,wishlistAddItemInputDto.idArticle());
+            logger.warn(LogMessages.ARTICLE_ID_ALREADY_EXISTS_IN_WISHLIST_ID,idWishList,wishlistAddItemInputDto.idArticle(),exception);
+            throw  exception;
+        };
 
         WishlistItemEntity wishlistItem2=WishlistItemEntity.builder()
                   .article(articleEntity)
@@ -162,49 +163,37 @@ public class WishlistService {
 
     public void deleteWishlistItem(Long idWishList, WishlistAddItemInputDto wishlistAddItemInputDto){
         long start=System.nanoTime();
-        if(idWishList==null){
-            String message = "L'id de la liste d'envie ne doit pas être null";
-            WishlistRemoveItemException exception = new WishlistRemoveItemException(message);
-            logger.warn(message,exception);
-            throw exception;
-        }
 
         WishlistEntity wishlistEntity=wishlistRepository.findById(Math.toIntExact(idWishList)).orElseThrow(()->
         {
-            WishlistNotFoundException exception = new WishlistNotFoundException("L'id de la liste d'envie ne correpond a aucune liste d'envie avec l'id "+idWishList);
-            logger.warn("L'id de la liste d'envie ne correpond a aucune liste d'envie avec l'id {}",idWishList,exception );
+            WishlistNotFoundException exception = new WishlistNotFoundException(Math.toIntExact(idWishList));
+            logger.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,idWishList,exception );
             return exception;
         });
 
         ArticleEntity articleEntity=articleRepository.findById(wishlistAddItemInputDto.idArticle()).orElseThrow(()-> {
-            ArticleNotFoundException exception = new ArticleNotFoundException("L'id de l'article ne correpond a aucun article avec l'id article "+wishlistAddItemInputDto.idArticle());
-            logger.warn("L'id de l'article ne correpond a aucun article avec l'id article {}",wishlistAddItemInputDto.idArticle(),exception);
+            ArticleNotFoundException exception = new ArticleNotFoundException(wishlistAddItemInputDto.idArticle());
+            logger.warn(LogMessages.ARTICLE_NOT_FOUND,wishlistAddItemInputDto.idArticle(),exception);
             return exception;
         } );
 
         WishlistItemEntity wishlistItemEntity=wishlistItemRepository.findByWishlist_idWishlistAndArticle_idArticle(idWishList, wishlistAddItemInputDto.idArticle()).orElseThrow(()->{
-            WishlistRemoveItemException exception = new WishlistRemoveItemException("L'id de liste d'envie et de l'article ne correpond a aucun article d'une liste d'envie avec idWishlist "+idWishList+ " et idArticle : "+wishlistAddItemInputDto.idArticle());
-            logger.warn("L'id de liste d'envie et de l'article ne correpond a aucun article d'une liste d'envie avec idWishlist {} et idArticle : {}",idWishList,wishlistAddItemInputDto.idArticle(),exception);
+            WishlistRemoveItemException exception = new WishlistRemoveItemException(idWishList,wishlistAddItemInputDto.idArticle());
+            logger.warn(LogMessages.WISHLIST_ITEM_NOT_FOUND_BY_WISHLIST_ID_AND_ARTICLE_ID,idWishList,wishlistAddItemInputDto.idArticle(),exception);
             return exception;
         });
 
-        wishlistRepository.delete(wishlistEntity);
+        wishlistItemRepository.delete(wishlistItemEntity);
         long durationMs = Tools.getDurationMs(start);
         logger.info("L'article {} a bien été supprimé de la liste d'envie {}, durationMs={}",articleEntity.getIdArticle(),wishlistItemEntity.getWishlist().getIdWishlist(),durationMs);
     }
 
     public List<AddArticleOutputDto> getAllArticleByWishlistId(Long idWishList){
         long start = System.nanoTime();
-        if(idWishList==null){
-            String message = "L'id de l'article ne doit pas être null";
-            WishlistGetAllArticleException exception = new WishlistGetAllArticleException(message);
-            logger.warn(message,exception);
-            throw exception;
-        }
 
         List<WishlistItemEntity> wishlistItemEntityList=wishlistItemRepository.findByWishlist_idWishlist(idWishList).orElseThrow(()->{
-            WishlistNotFoundException exception = new WishlistNotFoundException("L'id de la liste d'envie n'a aucune liste d'envie ou ne contient aucun article avec id wishlist : "+idWishList);
-            logger.warn("L'id de la liste d'envie n'a aucune liste d'envie ou ne contient aucun article avec id wishlist : {}",idWishList,exception);
+            WishlistNotFoundException exception = new WishlistNotFoundException(Math.toIntExact(idWishList));
+            logger.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,idWishList,exception);
             return exception;
         });
 

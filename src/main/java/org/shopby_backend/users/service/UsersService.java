@@ -3,6 +3,7 @@ package org.shopby_backend.users.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.users.*;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.shopby_backend.users.dto.*;
@@ -33,9 +34,8 @@ public class UsersService implements UserDetailsService {
     public UsersDto addUser(UserInputDto userInputDto) {
         long start = System.nanoTime();
         if(usersRepository.findByEmail(userInputDto.email()).isPresent()){
-            String message = "Vos identifiants existe deja";
-            UsersAlreadyExistsException exception = new UsersAlreadyExistsException(message);
-            log.warn(message,exception);
+            UsersAlreadyExistsException exception = new UsersAlreadyExistsException(userInputDto.email());
+            log.warn(LogMessages.USERS_ALREADY_EXISTS,userInputDto.email(),exception);
             throw exception;
         }
 
@@ -82,15 +82,15 @@ public class UsersService implements UserDetailsService {
         ValidationEntity validation =this.validationService.readCode(code);
 
         if(Instant.now().isAfter(validation.getExpirationDate())){
-            ValidationAccountException exception = new ValidationAccountException("Le code d'utilisateur a expiré le "+validation.getExpirationDate());
-            log.warn("Le code d'utilisateur a expiré le {}",validation.getExpirationDate(),exception);
+            ValidationAccountException exception = new ValidationAccountException(validation.getExpirationDate());
+            log.warn(LogMessages.VALIDATION_EXPIRED,validation.getExpirationDate(),exception);
             throw exception;
         }
 
         UsersEntity userExist=this.usersRepository.findById(validation.getUser().getId()).orElseThrow(()->
         {
-            ValidationAccountException exception = new ValidationAccountException("L'utilisateur n'existe pas avec l'id user "+validation.getUser().getId());
-            log.warn("L'utilisateur n'existe pas avec l'id user {}",validation.getUser().getId(),exception);
+            UsersNotFoundException exception = UsersNotFoundException.byUserId(validation.getUser().getId());
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,validation.getUser().getId(),exception);
             return exception;
         });
 
@@ -107,7 +107,7 @@ public class UsersService implements UserDetailsService {
 
         UserDetails userDetails=usersRepository.findByEmail(email).orElseThrow(()->{
             UsernameNotFoundException exception = new UsernameNotFoundException("L'utilisateur n'existe pas avec l'email "+email);
-            log.warn("L'utilisateur n'existe pas avec l'email {}",email,exception);
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_EMAIL,email,exception);
             return exception;
         });
 
@@ -128,8 +128,8 @@ public class UsersService implements UserDetailsService {
         long start = System.nanoTime();
         /// On recherche l'utilisateur par son adresse mail
         UsersEntity user=usersRepository.findByEmail(userNewPasswordDto.email()).orElseThrow(()->{
-            NewPasswordException exception = new NewPasswordException("L'email ne correspond a aucun utilisateur avec l'email "+userNewPasswordDto.email());
-            log.warn("L'email ne correspond a aucun utilisateur avec l'email {}",userNewPasswordDto.email(),exception);
+            NewPasswordException exception = new NewPasswordException(userNewPasswordDto.email());
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_EMAIL,userNewPasswordDto.email(),exception);
             return exception;
         });
 
@@ -162,8 +162,8 @@ public class UsersService implements UserDetailsService {
     public void updateUserRole(UserUpdateRoleDto userInputDto){
         long start = System.nanoTime();
         UsersEntity user=this.usersRepository.findByEmail(userInputDto.email()).orElseThrow(()->{
-            UsersNotFoundException exception = new UsersNotFoundException("Aucun users trouvés avec l'adresse mail "+userInputDto.email());
-            log.warn("Aucun users trouvés avec l'adresse mail {}",userInputDto.email(),exception);
+            UsersNotFoundException exception =  UsersNotFoundException.byEmail(userInputDto.email());
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_EMAIL,userInputDto.email(),exception);
             return exception;
         });
 
@@ -179,8 +179,8 @@ public class UsersService implements UserDetailsService {
         long start = System.nanoTime();
         UsersEntity user = usersRepository.findById(idUser).orElseThrow(() ->
         {
-            UsersNotFoundException exception = new UsersNotFoundException("L'utilisateur n'existe pas avec l'id "+idUser);
-            log.warn("L'utilisateur n'existe pas avec l'id {}",idUser,exception);
+            UsersNotFoundException exception = UsersNotFoundException.byUserId(idUser);
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,idUser,exception);
             return exception;
         });
 

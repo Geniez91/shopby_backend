@@ -9,6 +9,7 @@ import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
 import org.shopby_backend.status.model.StatusEntity;
 import org.shopby_backend.status.persistence.StatusRepository;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +25,8 @@ public class StatusService {
         long start = System.nanoTime();
 
         if (statusRepository.findByLibelle(statusInputDto.libelle()).isPresent()) {
-            StatusAlreadyExistsException exception = new StatusAlreadyExistsException("Le status existe deja avec le libelle " + statusInputDto.libelle());
-            log.warn("Le status existe deja avec le libelle {}", statusInputDto.libelle(), exception);
+            StatusAlreadyExistsException exception = new StatusAlreadyExistsException(statusInputDto.libelle());
+            log.warn(LogMessages.STATUS_ALREADY_EXISTS, statusInputDto.libelle(), exception);
         }
 
         StatusEntity newStatus = StatusEntity.builder()
@@ -42,8 +43,8 @@ public class StatusService {
 
         StatusEntity status=statusRepository.findById(idStatus).orElseThrow(()->
         {
-            StatusNotFoundException exception = new StatusNotFoundException("Aucun status n'existe avec l'id " + idStatus);
-            log.warn("Aucun status avec l'id {}", idStatus, exception);
+            StatusNotFoundException exception = StatusNotFoundException.byId(idStatus);
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
             return exception;
         });
 
@@ -58,8 +59,8 @@ public class StatusService {
         long start = System.nanoTime();
         StatusEntity status=statusRepository.findById(idStatus).orElseThrow(()->
         {
-            StatusNotFoundException exception = new StatusNotFoundException("Aucun status avec l'id " + idStatus);
-            log.warn("Aucun status avec l'id {}", idStatus, exception);
+            StatusNotFoundException exception =  StatusNotFoundException.byId(idStatus);
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
             return exception;
         });
 
@@ -72,8 +73,8 @@ public class StatusService {
         long start = System.nanoTime();
         StatusEntity status=statusRepository.findById(idStatus).orElseThrow(()->
         {
-            StatusNotFoundException exception = new StatusNotFoundException("Aucun status avec l'id " + idStatus);
-            log.warn("Aucun status avec l'id {}", idStatus, exception);
+            StatusNotFoundException exception = StatusNotFoundException.byId(idStatus);
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
             return exception;
         });
         long durationMs = Tools.getDurationMs(start);

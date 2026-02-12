@@ -1,13 +1,14 @@
 package org.shopby_backend.exception;
 
 import org.shopby_backend.exception.article.*;
-import org.shopby_backend.exception.articlePhoto.ArticlePhotoUpload;
+import org.shopby_backend.exception.articlePhoto.ArticlePhotoUploadException;
 import org.shopby_backend.exception.brand.*;
 import org.shopby_backend.exception.order.*;
 import org.shopby_backend.exception.status.*;
 import org.shopby_backend.exception.typeArticle.*;
 import org.shopby_backend.exception.users.*;
 import org.shopby_backend.exception.wishlist.*;
+import org.shopby_backend.tools.ApiErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -147,12 +148,17 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
     }
 
+    @ExceptionHandler(ValidationNotFoundException.class)
+    public ResponseEntity<ProblemDetail>handleValidationNotFound(ValidationNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+    }
+
                     /* =========================
        Photo Article EXCEPTIONS
        ========================= */
 
-    @ExceptionHandler(ArticlePhotoUpload.class)
-    public ResponseEntity<ProblemDetail>handleArticlePhotoUpload(ArticlePhotoUpload ex){
+    @ExceptionHandler(ArticlePhotoUploadException.class)
+    public ResponseEntity<ProblemDetail>handleArticlePhotoUpload(ArticlePhotoUploadException ex){
         return buildProblemDetail(HttpStatus.BAD_REQUEST,ex);
     }
 
@@ -186,6 +192,11 @@ public class GlobalExceptionHandler {
     private ResponseEntity<ProblemDetail> buildProblemDetail(HttpStatus status, Exception ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
         pd.setTitle(ex.getClass().getSimpleName());
+        if (ex instanceof ApiErrorCode apiError) {
+            pd.setProperty("errorCode", apiError.getErrorCode());
+        } else {
+            pd.setProperty("errorCode", "INTERNAL_ERROR");
+        }
         return ResponseEntity.status(status).body(pd);
     }
 

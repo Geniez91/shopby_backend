@@ -7,7 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.shopby_backend.exception.users.UsersAlreadyExistsException;
 import org.shopby_backend.exception.users.UsersCreateException;
+import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.users.dto.UserInfoUpdateDto;
 import org.shopby_backend.users.dto.UserInputDto;
@@ -77,14 +79,14 @@ class UsersServiceTest {
                 .password(inputDto.password())
                 .country(inputDto.country())
                 .build();
-        when(usersRepository.findByEmail(inputDto.email())).thenReturn(existingUser);
+        when(usersRepository.findByEmail(inputDto.email())).thenReturn(Optional.ofNullable(existingUser));
 
-        UsersCreateException usersCreateException= Assertions.assertThrows(
-                UsersCreateException.class,
+        UsersAlreadyExistsException usersAlreadyExistsException= Assertions.assertThrows(
+                UsersAlreadyExistsException.class,
                 () -> usersService.addUser(inputDto)
         );
 
-        Assertions.assertEquals("Vos identifiants existe deja", usersCreateException.getMessage());
+        Assertions.assertEquals("Vos identifiants existe deja avec email : jeremy@example.com", usersAlreadyExistsException.getMessage());
     }
 
     @Test
@@ -145,12 +147,12 @@ class UsersServiceTest {
                 .when(usersRepository)
                 .findById(idUser);
 
-        UsersUpdateException usersUpdateException= Assertions.assertThrows(
-                UsersUpdateException.class,
+        UsersNotFoundException usersNotFoundException= Assertions.assertThrows(
+                UsersNotFoundException.class,
                 () -> usersService.updateUserInfo(idUser,userInfoUpdate)
         );
 
-        Assertions.assertEquals("L'utilisateur n'existe pas", usersUpdateException.getMessage());
+        Assertions.assertEquals("L'utilisateur n'existe pas avec l'id user :0", usersNotFoundException.getMessage());
     }
 
     @Test

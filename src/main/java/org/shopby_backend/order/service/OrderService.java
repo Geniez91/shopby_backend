@@ -3,6 +3,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
+import org.shopby_backend.exception.article.ArticleNotFoundException;
 import org.shopby_backend.exception.order.*;
 import org.shopby_backend.exception.status.StatusNotFoundException;
 import org.shopby_backend.exception.users.UsersNotFoundException;
@@ -18,16 +19,15 @@ import org.shopby_backend.order.persistence.OrderRepository;
 import org.shopby_backend.order.tools.OrderTools;
 import org.shopby_backend.status.model.StatusEntity;
 import org.shopby_backend.status.persistence.StatusRepository;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
-import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import org.slf4j.Logger;
 
 @Slf4j
 @AllArgsConstructor
@@ -45,16 +45,16 @@ public class OrderService {
 
         UsersEntity users = usersRepository.findById(orderInputDto.idUser()).orElseThrow(() ->
         {
-            UsersNotFoundException exception= new UsersNotFoundException("La commande ne peut pas avoir un utilisateur inexistant" + orderInputDto.idUser());
-            log.warn("La commande ne peut pas avoir un utilisateur inexistant {}",orderInputDto.idUser(),exception);
+            UsersNotFoundException exception= UsersNotFoundException.byUserId(orderInputDto.idUser());
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,orderInputDto.idUser(),exception);
             return exception;
         });
 
         String statusOrder="Commandés";
         StatusEntity status = statusRepository.findByLibelle(statusOrder).orElseThrow(() ->
         {
-            StatusNotFoundException exception = new StatusNotFoundException("La commande ne peut pas avoir un status inexistant "+ statusOrder);
-            log.warn("La commande ne peut pas avoir un status inexistant {}",statusOrder,exception);
+            StatusNotFoundException exception =  StatusNotFoundException.byOrderStatus(OrderStatus.valueOf(statusOrder));
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ORDER_STATUS,statusOrder,exception);
             return exception;
         });
 
@@ -73,7 +73,7 @@ public class OrderService {
         OrderEntity savedOrderEntity = orderRepository.save(orderEntity);
 
         List<OrderItemEntity> items = orderInputDto.articlesQuantity().stream().map(article -> {
-            ArticleEntity articleEntity = articleRepository.findById(article.getIdArticle()).orElseThrow(() -> new OrderCreateException("L'article n'existe pas"));
+            ArticleEntity articleEntity = articleRepository.findById(article.getIdArticle()).orElseThrow(() -> new ArticleNotFoundException(article.getIdArticle()));
             return OrderItemEntity.builder()
                     .orderItemId(new OrderItemId(savedOrderEntity.getIdOrder(), articleEntity.getIdArticle()))
                     .article(articleEntity)
@@ -95,14 +95,14 @@ public class OrderService {
         OrderStatus statusOrder = OrderStatus.Commandés;
         List<OrderEntity> orders = Collections.singletonList(orderRepository.findByDateOrderAndStatus_libelle(local,statusOrder.name()).orElseThrow(() ->
         {
-            OrderNotFoundException exception = new OrderNotFoundException("Aucun elements ne correspond au filtre date order " +local +" et le status order " + statusOrder);
-            log.warn("Aucun elements ne correspond au filtre date order {} et le status order {} ",local,statusOrder,exception);
+            OrderNotFoundException exception = OrderNotFoundException.byStatusAndLocalDate(statusOrder,local);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_DATE_AND_STATUS_ORDER,local,statusOrder,exception);
             return exception;
         }));
 
         StatusEntity status = statusRepository.findByLibelle(OrderStatus.LivraisonEnCours.name()).orElseThrow(() -> {
-            StatusNotFoundException exception = new StatusNotFoundException("Aucun status ne correspond à " + OrderStatus.LivraisonEnCours.name());
-            log.warn("Aucun status ne correspond à {}", OrderStatus.LivraisonEnCours.name(),exception);
+            StatusNotFoundException exception = StatusNotFoundException.byOrderStatus(OrderStatus.LivraisonEnCours);
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ORDER_STATUS, OrderStatus.LivraisonEnCours.name(),exception);
             return exception;
         });
 
@@ -117,14 +117,14 @@ public class OrderService {
     public OrderOutputDto deleteOrder(Long orderId) {
         long start = System.nanoTime();
         OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> {
-            OrderNotFoundException exception=new OrderNotFoundException("Aucun order ne correspond au order Id " + orderId);
-            log.warn("Le orderId ne correspondent pas un commande spécifique : {}",orderId,exception);
+            OrderNotFoundException exception= OrderNotFoundException.byOrderId(orderId);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
             return exception;
         });
 
         List<OrderItemEntity> orderItemEntities = orderItemRepository.findByOrder_IdOrder(order.getIdOrder()).orElseThrow(() -> {
-            OrderItemNotFoundException exception = new OrderItemNotFoundException("Aucun order item ne correspond a votre order id "+ orderId);
-            log.warn("Aucun order item ne correspond au order Id  + orderId : {}",orderId,exception);
+            OrderItemNotFoundException exception = new OrderItemNotFoundException(orderId);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
             return exception;
         });
 
@@ -138,8 +138,8 @@ public class OrderService {
     public OrderOutputDto getOrder(Long orderId) {
         long start = System.nanoTime();
         OrderEntity orderEntity = orderRepository.findById(orderId).orElseThrow(() -> {
-            OrderNotFoundException exception = new OrderNotFoundException("Aucune commande ne correspond à l'id " + orderId);
-            log.warn("Le orderId ne correspondent pas un commande spécifique : {}",orderId,exception);
+            OrderNotFoundException exception =  OrderNotFoundException.byOrderId(orderId);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
             return exception;
         });
         List<OrderItemEntity> orderItemEntities = orderItemRepository.findByOrder_IdOrder(orderEntity.getIdOrder()).orElseThrow(() -> new OrderDeleteException("Aucun order item ne correspond a votre order id"));
@@ -154,16 +154,16 @@ public class OrderService {
 
         List<OrderEntity> listOrderEntity = orderRepository.findByUser_Id(orderGetByUserIdDto.userId()).orElseThrow(()->
         {
-            OrderNotFoundException exception = new OrderNotFoundException("Aucune commande ne correspond au userId "+orderGetByUserIdDto.userId());
-            log.warn("Aucune commande ne correspond au userId {}",orderGetByUserIdDto.userId(),exception);
+            OrderNotFoundException exception = OrderNotFoundException.byUserId(orderGetByUserIdDto.userId());
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_USER_ID,orderGetByUserIdDto.userId(),exception);
             return exception;
         });
 
         List<OrderOutputDto> result=  listOrderEntity.stream().map(order -> {
             List<OrderItemEntity> items = orderItemRepository.findByOrder_IdOrder(order.getIdOrder()).orElseThrow(()->
             {
-                OrderItemNotFoundException exception = new OrderItemNotFoundException("Aucun article ne correspond à la commande " + order.getIdOrder());
-                log.warn("Aucun article ne correspond à la commande {}",order.getIdOrder(),exception);
+                OrderItemNotFoundException exception = new OrderItemNotFoundException(order.getIdOrder());
+                log.warn(LogMessages.ORDER_ITEM_NOT_FOUND_BY_ORDER_ID,order.getIdOrder(),exception);
                 return exception;
             });
             return orderTools.getOrderOutputDto(order, items);

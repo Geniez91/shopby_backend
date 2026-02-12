@@ -1,7 +1,7 @@
 package org.shopby_backend.articlePhoto.service;
 
 import org.shopby_backend.articlePhoto.model.StorageService;
-import org.shopby_backend.exception.articlePhoto.ArticlePhotoUpload;
+import org.shopby_backend.exception.articlePhoto.ArticlePhotoUploadException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,11 +26,11 @@ public class LocalStorageService implements StorageService {
     @Override
     public String upload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new ArticlePhotoUpload("Fichier vide");
+            throw new ArticlePhotoUploadException("Fichier vide");
         }
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new ArticlePhotoUpload("Le fichier doit être une image");
+            throw new ArticlePhotoUploadException("Le fichier doit être une image");
         }
         String originalFilename = file.getOriginalFilename();
         String extension = getExtension(originalFilename);
@@ -41,14 +41,14 @@ public class LocalStorageService implements StorageService {
         try {
             Files.createDirectories(dir);
             if (!target.startsWith(dir)) {
-                throw new ArticlePhotoUpload("Chemin invalide");
+                throw new ArticlePhotoUploadException("Chemin invalide");
             }
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
             }
             return "/uploads/articles/" + fileName;
         } catch (IOException e) {
-            throw new ArticlePhotoUpload("Erreur sauvegarde fichier");
+            throw new ArticlePhotoUploadException("Erreur sauvegarde fichier");
         }
     }
 

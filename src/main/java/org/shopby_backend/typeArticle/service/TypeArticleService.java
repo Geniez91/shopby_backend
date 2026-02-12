@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.typeArticle.*;
 import org.shopby_backend.status.service.StatusService;
+import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
 import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
@@ -24,11 +25,11 @@ public class TypeArticleService {
     public TypeArticleOutputDto addTypeArticle(TypeArticleDto typeArticleDto) {
         long start = System.nanoTime();
 
-        typeArticleRepository.findByLibelle(typeArticleDto.libelle()).orElseThrow(()->{
-            TypeArticleAlreadyExistsException exception = new TypeArticleAlreadyExistsException("Le type d'article existe deja avec le libelle "+typeArticleDto.libelle());
-            log.warn("Le type d'article existe deja avec le libelle {}",typeArticleDto.libelle(), exception);
-            return exception;
-        });
+        if(typeArticleRepository.existsByLibelle(typeArticleDto.libelle())){
+            TypeArticleAlreadyExistsException exception = new TypeArticleAlreadyExistsException(typeArticleDto.libelle());
+            log.warn(LogMessages.TYPE_ARTICLE_ALREADY_EXISTS,typeArticleDto.libelle(), exception);
+            throw exception;
+        };
 
         TypeArticleEntity typeArticleEntity = TypeArticleEntity.builder()
                 .libelle(typeArticleDto.libelle())
@@ -39,8 +40,8 @@ public class TypeArticleService {
         if (typeArticleDto.parentId() != null) {
             TypeArticleEntity parent = typeArticleRepository.findById(typeArticleDto.parentId()).orElseThrow(() ->
             {
-                TypeArticleNotFoundException exception = new TypeArticleNotFoundException("Le parent est introuvable avec l'id "+typeArticleDto.parentId());
-                log.warn("Le parent est introuvable avec l'id {}",typeArticleDto.parentId(), exception);
+                TypeArticleNotFoundException exception = TypeArticleNotFoundException.byParentId(typeArticleDto.parentId());
+                log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_PARENT_ID,typeArticleDto.parentId(), exception);
                 return exception;
             });
 
@@ -58,8 +59,8 @@ public class TypeArticleService {
         long start = System.nanoTime();
         TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idType).orElseThrow(()->
         {
-            TypeArticleNotFoundException exception =  new TypeArticleNotFoundException("Le type d'article n'existe pas avc l'id type "+idType);
-            log.warn("Le type d'article n'existe pas avc l'id type {}",idType,exception);
+            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idType);
+            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idType,exception);
             return exception;
         });
 
@@ -75,8 +76,8 @@ public class TypeArticleService {
 
         TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idTypeArticle).orElseThrow(()->
         {
-            TypeArticleNotFoundException exception = new TypeArticleNotFoundException("Le type d'article n'existe pas avec l'id type "+idTypeArticle);
-            log.warn("Le type d'article n'existe pas avec l'id type {}",idTypeArticle,exception);
+            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idTypeArticle);
+            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idTypeArticle,exception);
             return exception;
         });
 
@@ -98,8 +99,8 @@ public class TypeArticleService {
 
         TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idTypeArticle).orElseThrow(()->
         {
-            TypeArticleNotFoundException exception =  new TypeArticleNotFoundException("Le type d'article n'existe pas avec l'id type " + idTypeArticle);
-            log.warn("Le type d'article n'existe pas avec l'id type {}",idTypeArticle,exception);
+            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idTypeArticle);
+            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idTypeArticle,exception);
             return exception;
         });
 

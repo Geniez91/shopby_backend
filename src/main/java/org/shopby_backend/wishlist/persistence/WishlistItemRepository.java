@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WishlistItemRepository extends JpaRepository<WishlistItemEntity, WishListItemId> {
+    Boolean existsByWishlist_IdWishlistAndArticle_IdArticle(Long wishlistId, Long articleId);
     Optional<WishlistItemEntity> findByWishlist_idWishlistAndArticle_idArticle(Long wishlistId, Long articleId);
     Optional<List<WishlistItemEntity>> findByWishlist_idWishlist(Long wishlistId);
 }
