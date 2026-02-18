@@ -8,6 +8,7 @@ import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
 import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
+import org.shopby_backend.typeArticle.mapper.TypeArticleMapper;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import java.util.List;
 @Service
 public class TypeArticleService {
     private TypeArticleRepository typeArticleRepository;
+    private TypeArticleMapper typeArticleMapper;
 
     public TypeArticleOutputDto addTypeArticle(TypeArticleDto typeArticleDto) {
         long start = System.nanoTime();
@@ -31,9 +33,7 @@ public class TypeArticleService {
             throw exception;
         };
 
-        TypeArticleEntity typeArticleEntity = TypeArticleEntity.builder()
-                .libelle(typeArticleDto.libelle())
-                .build();
+        TypeArticleEntity typeArticleEntity = typeArticleMapper.toEntity(typeArticleDto);
 
         Long parentId = null;
 
@@ -52,7 +52,7 @@ public class TypeArticleService {
         TypeArticleEntity savedTypeArticle = typeArticleRepository.save(typeArticleEntity);
         long durationsMs = Tools.getDurationMs(start);
         log.info("Le type d'article {} a bien été ajouté, durationMs : {}",savedTypeArticle.getLibelle(),durationsMs);
-        return new TypeArticleOutputDto(savedTypeArticle.getIdTypeArticle(), savedTypeArticle.getLibelle(), parentId);
+        return typeArticleMapper.toDto(typeArticleEntity,parentId);
     }
 
     public TypeArticleOutputDto updateTypeArticle(Long idType,TypeArticleDto typeArticleDto) {
@@ -68,7 +68,7 @@ public class TypeArticleService {
         TypeArticleEntity savedTypeArticle=typeArticleRepository.save(typeArticleEntity);
         long durationsMs = Tools.getDurationMs(start);
         log.info("Le type d'article {} a bien été modifié,durationMs : {}",savedTypeArticle.getLibelle(),durationsMs);
-        return new TypeArticleOutputDto(savedTypeArticle.getIdTypeArticle(),savedTypeArticle.getLibelle(),savedTypeArticle.getParent().getIdTypeArticle());
+        return typeArticleMapper.toDto(savedTypeArticle,savedTypeArticle.getParent().getIdTypeArticle());
     }
 
     public void deleteTypeArticle(Long idTypeArticle) {
@@ -88,7 +88,8 @@ public class TypeArticleService {
 
     public List<TypeArticleOutputDto> getAllTypeArticle() {
         long start = System.nanoTime();
-        List<TypeArticleOutputDto> listTypeArticle = typeArticleRepository.findAll().stream().map((typeArticle)-> new TypeArticleOutputDto(typeArticle.getIdTypeArticle(),typeArticle.getLibelle(),typeArticle.getParent().getIdTypeArticle())).toList();
+        List<TypeArticleOutputDto> listTypeArticle = typeArticleRepository.findAll().stream().map((typeArticle)-> typeArticleMapper.toDto(typeArticle,typeArticle.getParent()
+                .getIdTypeArticle())).toList();
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe plus de {} type d'article dans la base de données,durationsMs : {}",listTypeArticle.size(),durationMs);
         return listTypeArticle;
@@ -106,6 +107,6 @@ public class TypeArticleService {
 
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe bien un type d'article {},durationMs : {}",typeArticleEntity.getLibelle(),durationMs);
-        return new TypeArticleOutputDto(typeArticleEntity.getIdTypeArticle(),typeArticleEntity.getLibelle(),typeArticleEntity.getParent().getIdTypeArticle());
+        return typeArticleMapper.toDto(typeArticleEntity,typeArticleEntity.getParent().getIdTypeArticle());
     }
 }

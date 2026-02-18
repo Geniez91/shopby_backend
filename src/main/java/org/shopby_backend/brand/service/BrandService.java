@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.service.ArticleService;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
+import org.shopby_backend.brand.mapper.BrandMapper;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.*;
@@ -21,6 +22,7 @@ import java.util.List;
 @Service
 public class BrandService {
     private BrandRepository brandRepository;
+    private BrandMapper brandMapper;
 
     public BrandOutputDto addBrand(BrandInputDto brandInputDto) {
         long start = System.nanoTime();
@@ -32,13 +34,11 @@ public class BrandService {
             throw exception;
         };
 
-        BrandEntity brandEntity=BrandEntity.builder()
-                .libelle(brandInputDto.libelle())
-                .build();
+        BrandEntity brandEntity=brandMapper.toEntity(brandInputDto);
         BrandEntity savedBrand=brandRepository.save(brandEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("La marque {} a bien été ajouté, durationMs {}",savedBrand.getIdBrand(),durationMs);
-        return new BrandOutputDto(savedBrand.getIdBrand(),savedBrand.getLibelle());
+        return brandMapper.toDto(savedBrand);
     }
 
     public BrandOutputDto updateBrand(Long id,BrandInputDto updateBrandInputDto) {
@@ -60,14 +60,14 @@ public class BrandService {
         BrandEntity updatedBrand=brandRepository.save(existBrand);
         long durationMs = Tools.getDurationMs(start);
         log.info("La marque {} a bien été mise à jour, durationMs {}",updatedBrand.getIdBrand(),durationMs);
-        return new BrandOutputDto(updatedBrand.getIdBrand(),updatedBrand.getLibelle());
+        return brandMapper.toDto(updatedBrand);
     }
 
     public List<BrandOutputDto> findAllBrands() {
         long start = System.nanoTime();
 
         List<BrandOutputDto> listBrandOutputDto= brandRepository.findAll().stream().map(brandEntity ->
-        new BrandOutputDto(brandEntity.getIdBrand(),brandEntity.getLibelle())
+        brandMapper.toDto(brandEntity)
         ).toList();
 
         long durationMs = Tools.getDurationMs(start);
@@ -84,7 +84,7 @@ public class BrandService {
         });
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe plus une marque avec l'id brand {}, durationMs {}",brandEntity.getIdBrand(),durationMs);
-        return new BrandOutputDto(brandEntity.getIdBrand(),brandEntity.getLibelle());
+        return brandMapper.toDto(brandEntity);
     }
 
     public void deleteBrand(Long id) {

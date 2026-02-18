@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.dto.AddArticleInputDto;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
+import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.exception.article.*;
@@ -31,6 +32,7 @@ public class ArticleService {
     private ArticleRepository articleRepository;
     private BrandRepository brandRepository;
     private TypeArticleRepository typeArticleRepository;
+    private ArticleMapper articleMapper;
 
     public AddArticleOutputDto addNewArticle(AddArticleInputDto addArticleInputDto){
         long start = System.nanoTime();
@@ -54,13 +56,7 @@ public class ArticleService {
             return exception;
         });
 
-        ArticleEntity article = ArticleEntity.builder()
-                .name(addArticleInputDto.nameArticle())
-                .description(addArticleInputDto.descriptionArticle())
-                .brand(brandEntity)
-                .typeArticle(typeArticleEntity)
-                .price(addArticleInputDto.price())
-                .build();
+        ArticleEntity article = articleMapper.toEntity(addArticleInputDto,typeArticleEntity,brandEntity);
 
         ArticleEntity savedArticle = articleRepository.save(article);
         long durationMs = Tools.getDurationMs(start);
@@ -73,15 +69,7 @@ public class ArticleService {
                 typeArticleEntity.getLibelle(),
                 durationMs);
 
-        return new AddArticleOutputDto(
-                savedArticle.getIdArticle(),
-                savedArticle.getName(),
-                savedArticle.getDescription(),
-                savedArticle.getPrice(),
-                brandEntity.getLibelle(),
-                typeArticleEntity.getLibelle(),
-                savedArticle.getCreationDate()
-        );
+        return articleMapper.toDto(savedArticle);
     }
 
     public AddArticleOutputDto updateArticle(Long id,AddArticleInputDto addArticleInputDto){
@@ -128,7 +116,7 @@ public class ArticleService {
         ArticleEntity updatedArticle=articleRepository.save(articleEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("L'article {} a bien été mise à jour,durationMs={}",updatedArticle.getIdArticle(),durationMs);
-        return new AddArticleOutputDto(updatedArticle.getIdArticle(),updatedArticle.getName(),updatedArticle.getDescription(),updatedArticle.getPrice(),updatedArticle.getBrand().getLibelle(),updatedArticle.getTypeArticle().getLibelle(),updatedArticle.getCreationDate());
+        return articleMapper.toDto(updatedArticle);
     }
 
     public void deleteArticle(Long id){
@@ -146,7 +134,7 @@ public class ArticleService {
 
     public List<AddArticleOutputDto> getAllArticles(){
         long start = System.nanoTime();
-        List<AddArticleOutputDto> listArticle = articleRepository.findAll().stream().map(article-> new AddArticleOutputDto(article.getIdArticle(),article.getName(),article.getDescription(),article.getPrice(),article.getBrand().getLibelle(),article.getTypeArticle().getLibelle(),article.getCreationDate())).toList();
+        List<AddArticleOutputDto> listArticle = articleRepository.findAll().stream().map(article-> articleMapper.toDto(article)).toList();
         long durationMs = Tools.getDurationMs(start);
         log.info("{} articles ont été trouvés, durationMs = {}",listArticle.size(),durationMs);
         return listArticle;
@@ -161,6 +149,6 @@ public class ArticleService {
         });
         long durationMs = Tools.getDurationMs(start);
         log.info("L'article {} a bien été trouvé, durationMs = {}",articleEntity.getIdArticle(),durationMs);
-        return new AddArticleOutputDto(articleEntity.getIdArticle(),articleEntity.getName(),articleEntity.getDescription(),articleEntity.getPrice(),articleEntity.getBrand().getLibelle(),articleEntity.getTypeArticle().getLibelle(),articleEntity.getCreationDate());
+        return articleMapper.toDto(articleEntity);
     }
 }

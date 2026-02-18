@@ -7,6 +7,7 @@ import org.shopby_backend.exception.status.StatusNotFoundException;
 import org.shopby_backend.exception.status.StatusUpdateException;
 import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
+import org.shopby_backend.status.mapper.StatusMapper;
 import org.shopby_backend.status.model.StatusEntity;
 import org.shopby_backend.status.persistence.StatusRepository;
 import org.shopby_backend.tools.LogMessages;
@@ -20,6 +21,7 @@ import java.util.List;
 @Service
 public class StatusService {
     private StatusRepository statusRepository;
+    private StatusMapper statusMapper;
 
     public StatusOutputDto addNewStatus(StatusInputDto statusInputDto) {
         long start = System.nanoTime();
@@ -29,13 +31,11 @@ public class StatusService {
             log.warn(LogMessages.STATUS_ALREADY_EXISTS, statusInputDto.libelle(), exception);
         }
 
-        StatusEntity newStatus = StatusEntity.builder()
-                .libelle(statusInputDto.libelle())
-                .build();
+        StatusEntity newStatus = statusMapper.toEntity(statusInputDto);
         StatusEntity savedEntity = statusRepository.save(newStatus);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le status {} a bien été ajouté,durationMs = {}", savedEntity.getLibelle(), durationMs);
-        return new StatusOutputDto(savedEntity.getIdStatus(), savedEntity.getLibelle());
+        return statusMapper.toDto(savedEntity);
     }
 
     public StatusOutputDto updateStatus(Long idStatus,StatusInputDto statusInputDto) {
@@ -52,7 +52,7 @@ public class StatusService {
         StatusEntity savedStatus=statusRepository.save(status);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le status {} a bien été mise à jour,durationMs = {}", savedStatus.getLibelle(), durationMs);
-        return new StatusOutputDto(savedStatus.getIdStatus(),savedStatus.getLibelle());
+        return statusMapper.toDto(savedStatus);
     }
 
     public void deleteStatus(Long idStatus) {
@@ -79,13 +79,12 @@ public class StatusService {
         });
         long durationMs = Tools.getDurationMs(start);
         log.info("Le status {} est bien présent, durationMs = {}", status.getIdStatus(), durationMs);
-        return new StatusOutputDto(status.getIdStatus(),status.getLibelle());
+        return statusMapper.toDto(status);
     }
 
     public List<StatusOutputDto> getAllStatus() {
       long start = System.nanoTime();
-      List<StatusOutputDto> listStatusDto= statusRepository.findAll().stream().map(statusEntity -> new StatusOutputDto(statusEntity.getIdStatus(),statusEntity.getLibelle())
-        ).toList();
+      List<StatusOutputDto> listStatusDto= statusRepository.findAll().stream().map(statusEntity -> statusMapper.toDto(statusEntity)).toList();
       long durationMs = Tools.getDurationMs(start);
       log.info("Il ya plus de {} status dans la base de données, durationMs = {}", listStatusDto.size(), durationMs);
       return listStatusDto;

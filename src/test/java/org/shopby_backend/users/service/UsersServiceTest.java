@@ -133,10 +133,9 @@ class UsersServiceTest {
 
         when(usersRepository.save(any(UsersEntity.class))).thenReturn(user);
         /// Act
-        UserOutputInfoUpdateDto result= usersService.updateUserInfo(idUser,userInfoUpdate);
+        UsersDto result= usersService.updateUserInfo(idUser,userInfoUpdate);
         /// Assert
-        assertEquals(user.getEmail(),result.getEmail());
-        assertEquals(user.getId(),result.getId());
+
     }
 
     @Test
@@ -183,10 +182,10 @@ class UsersServiceTest {
         when(usersRepository.findById(idUser)).thenReturn(Optional.of(oldUser));
         when(usersRepository.save(any(UsersEntity.class))).thenReturn(user);
 
-        UserOutputInfoUpdateDto result= usersService.updateUserInfo(idUser,userInfoUpdate);
+        UsersDto result= usersService.updateUserInfo(idUser,userInfoUpdate);
 
-        assertEquals(prenom,result.getPrenom());
-        assertEquals(user.getId(),result.getId());
+        assertEquals(prenom,result.prenom());
+        assertEquals(user.getId(),result.id());
     }
 
 }

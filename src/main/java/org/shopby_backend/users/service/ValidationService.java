@@ -6,6 +6,7 @@ import org.shopby_backend.exception.users.ValidationAccountException;
 import org.shopby_backend.exception.users.ValidationNotFoundException;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
+import org.shopby_backend.users.mapper.ValidationMapper;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.ValidationRepository;
@@ -25,6 +26,7 @@ public class ValidationService {
     private ValidationRepository validationRepository;
     private NotificationService notificationService;
     private static final Logger logger = LoggerFactory.getLogger(ValidationService.class);
+    private ValidationMapper validationMapper;
 
     public void save(UsersEntity user) {
         long start = System.nanoTime();
@@ -34,12 +36,7 @@ public class ValidationService {
         random.nextInt(BOUND);
         String code= String.format("%06d", random.nextInt(BOUND));
 
-        ValidationEntity validationEntity=ValidationEntity.builder()
-                .user(user)
-                .creationDate(creationDate)
-                .expirationDate(creationDate.plus(10, ChronoUnit.MINUTES))
-                .code(code)
-                .build();
+        ValidationEntity validationEntity=validationMapper.toEntity(user,creationDate,code);
         validationRepository.save(validationEntity);
         notificationService.sendRegistrationConfirmation(validationEntity);
         long durationMs = Tools.getDurationMs(start);;

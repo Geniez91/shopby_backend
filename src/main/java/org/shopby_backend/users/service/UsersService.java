@@ -5,15 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.users.*;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
-import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.shopby_backend.users.dto.*;
+import org.shopby_backend.users.mapper.UsersMapper;
 import org.shopby_backend.users.model.RoleEntity;
 import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,51 +28,36 @@ public class UsersService implements UserDetailsService {
     private UsersRepository usersRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private ValidationService validationService;
+    private UsersMapper usersMapper;
 
     public UsersDto addUser(UserInputDto userInputDto) {
         long start = System.nanoTime();
-        if(usersRepository.findByEmail(userInputDto.email()).isPresent()){
+        if (usersRepository.findByEmail(userInputDto.email()).isPresent()) {
             UsersAlreadyExistsException exception = new UsersAlreadyExistsException(userInputDto.email());
-            log.warn(LogMessages.USERS_ALREADY_EXISTS,userInputDto.email(),exception);
+            log.warn(LogMessages.USERS_ALREADY_EXISTS, userInputDto.email(), exception);
             throw exception;
         }
 
-        if(!userInputDto.email().contains("@")){
+        if (!userInputDto.email().contains("@")) {
             String message = "Votre email est invalide";
             UsersCreateException exception = new UsersCreateException(message);
-            log.error(message,exception);
+            log.error(message, exception);
             throw exception;
         }
 
-        final RoleEntity roleUser=new RoleEntity();
+        final RoleEntity roleUser = new RoleEntity();
         roleUser.setLibelle(TypeRoleEnum.USER);
 
-        UsersEntity user = UsersEntity.builder()
-                .nom(userInputDto.nom())
-                .prenom(userInputDto.prenom())
-                .password(bCryptPasswordEncoder.encode(userInputDto.password()))
-                .email(userInputDto.email())
-                .role(roleUser)
-                .country(userInputDto.country())
-                .enabled(false)
-                .billingAddress(null)
-                .deliveryAddress(null)
-                .build();
+        UsersEntity user = usersMapper.toEntity(userInputDto, bCryptPasswordEncoder, roleUser);
         UsersEntity savedUser = usersRepository.save(user);
 
-        if(roleUser.getLibelle().equals(TypeRoleEnum.USER)){
+        if (roleUser.getLibelle().equals(TypeRoleEnum.USER)) {
             validationService.save(savedUser);
         }
 
         long durationMs = Tools.getDurationMs(start);
-        log.info("L'utilisateur {} a bien été ajouté, durationMs = {}",savedUser.getId(),durationMs);
-        return new UsersDto(
-                savedUser.getId(),
-                savedUser.getNom(),
-                savedUser.getPrenom(),
-                savedUser.getPassword(),
-                savedUser.getEmail(),
-                savedUser.getCountry());
+        log.info("L'utilisateur {} a bien été ajouté, durationMs = {}", savedUser.getId(), durationMs);
+        return usersMapper.toDto(savedUser);
     }
 
     public String activationUser(String code) {
@@ -145,15 +128,9 @@ public class UsersService implements UserDetailsService {
         }
     }
 
-    public List<UsersOutput> findAllUsers(){
+    public List<UsersDto> findAllUsers(){
         long start = System.nanoTime();
-        List<UsersOutput> listUsers = this.usersRepository.findAll().stream().map(user->new UsersOutput(
-                user.getId(),
-                user.getPrenom(),
-                user.getNom(),
-                user.getPassword(),
-                user.getEmail()
-        )).toList();
+        List<UsersDto> listUsers = this.usersRepository.findAll().stream().map(user->usersMapper.toDto(user)).toList();
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre d'utilisateur dans la base de données est de {},durationMs = {}",listUsers.size(),durationMs);
         return listUsers;
@@ -175,7 +152,7 @@ public class UsersService implements UserDetailsService {
         log.info("Le role de l'utilisateur {} a bien été mis à jour, durationMs={}",userInputDto.email(),durationMs);
     }
 
-    public UserOutputInfoUpdateDto updateUserInfo(Long idUser, UserInfoUpdateDto userInfoUpdate){
+    public UsersDto updateUserInfo(Long idUser, UserInfoUpdateDto userInfoUpdate){
         long start = System.nanoTime();
         UsersEntity user = usersRepository.findById(idUser).orElseThrow(() ->
         {
@@ -214,15 +191,6 @@ public class UsersService implements UserDetailsService {
         UsersEntity savedUsers= usersRepository.save(user);
         long durationMs=Tools.getDurationMs(start);
         log.info("L'utilisateur {} a bien été mise à jour, durationMs = {}",savedUsers.getId(),durationMs);
-        return UserOutputInfoUpdateDto.builder()
-                .id(savedUsers.getId())
-                .nom(savedUsers.getNom())
-                .prenom(savedUsers.getPrenom())
-                .password(savedUsers.getPassword())
-                .email(savedUsers.getEmail())
-                .country(savedUsers.getCountry())
-                .deliveryAddress(savedUsers.getDeliveryAddress())
-                .billingAddress(savedUsers.getBillingAddress())
-                .build();
+        return usersMapper.toDto(savedUsers);
     }
 }

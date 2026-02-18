@@ -14,6 +14,8 @@ import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
 import org.shopby_backend.users.service.ValidationService;
 import org.shopby_backend.wishlist.dto.*;
+import org.shopby_backend.wishlist.mapper.WishlistItemMapper;
+import org.shopby_backend.wishlist.mapper.WishlistMapper;
 import org.shopby_backend.wishlist.model.WishlistEntity;
 import org.shopby_backend.wishlist.model.WishlistItemEntity;
 import org.shopby_backend.wishlist.persistence.WishlistItemRepository;
@@ -33,6 +35,8 @@ public class WishlistService {
     private UsersRepository usersRepository;
     private WishlistItemRepository wishlistItemRepository;
     private ArticleRepository articleRepository;
+    private WishlistMapper wishlistMapper;
+    private WishlistItemMapper wishlistItemMapper;
     private static final Logger logger = LoggerFactory.getLogger(WishlistService.class);
 
     public WishlistOutputDto addWishList(WishlistInputDto wishlistInputDto) {
@@ -46,15 +50,11 @@ public class WishlistService {
                 }
             );
 
-        WishlistEntity wishlist= WishlistEntity.builder()
-                .user(user)
-                .name(wishlistInputDto.name())
-                .description(wishlistInputDto.description())
-                .build();
+        WishlistEntity wishlist = wishlistMapper.toEntity(wishlistInputDto,user);
         WishlistEntity savedWishList=wishlistRepository.save(wishlist);
         long durationMs = Tools.getDurationMs(start);
         logger.info("La liste d'envie a bien été créer avec l'id {}, durationMs={}",savedWishList.getIdWishlist(),durationMs);
-        return new WishlistOutputDto(savedWishList.getIdWishlist(), savedWishList.getUser().getId(),savedWishList.getName(),savedWishList.getDescription());
+        return wishlistMapper.toOutputDto(savedWishList);
     }
 
     public WishlistOutputDto updateWishlist(Integer idWishList, WishlistUpdateDto wishlistInputDto) {
@@ -77,7 +77,7 @@ public class WishlistService {
         WishlistEntity savedWishList=wishlistRepository.save(wishlistEntity);
         long durationMs = Tools.getDurationMs(start);
         logger.info("La liste d'envie {} a bien été modifié, durationMs={}",savedWishList.getIdWishlist(),durationMs);
-        return new WishlistOutputDto(savedWishList.getIdWishlist(), savedWishList.getUser().getId(),savedWishList.getName(),savedWishList.getDescription());
+        return wishlistMapper.toOutputDto(savedWishList);
     }
 
     public void deleteWishlist(Integer idWishList){
@@ -103,7 +103,7 @@ public class WishlistService {
        });
        long durationMs = Tools.getDurationMs(start);
        logger.info("La liste d'envie {} a bien été affiché, durationMs={}",wishlistEntity.getIdWishlist(),durationMs);
-       return new WishlistOutputDto(wishlistEntity.getIdWishlist(), wishlistEntity.getUser().getId(),wishlistEntity.getName(),wishlistEntity.getDescription());
+       return wishlistMapper.toOutputDto(wishlistEntity);
     }
 
     public List<WishlistOutputDto>getAllWishListByUserId(WishListGetAllByIdDto wishListGetAllByIdDto){
@@ -116,7 +116,7 @@ public class WishlistService {
             return exception;
         });
 
-        List<WishlistOutputDto> listWishOutputDto = wishlistRepository.findByUserId(user.getId()).stream().map(wishlistEntity -> new WishlistOutputDto(wishlistEntity.getIdWishlist(), wishlistEntity.getUser().getId(),wishlistEntity.getName(),wishlistEntity.getDescription())).toList();
+        List<WishlistOutputDto> listWishOutputDto = wishlistRepository.findByUserId(user.getId()).stream().map(wishlistEntity -> wishlistMapper.toOutputDto(wishlistEntity)).toList();
         long durationMs = Tools.getDurationMs(start);
         logger.info("Le nombre de list d'envie est de {} pour l'utilisateur {},durationMs={}",listWishOutputDto.size(),wishListGetAllByIdDto.userId(),durationMs);
         return listWishOutputDto;
@@ -151,14 +151,11 @@ public class WishlistService {
             throw  exception;
         };
 
-        WishlistItemEntity wishlistItem2=WishlistItemEntity.builder()
-                  .article(articleEntity)
-                  .wishlist(wishlistEntity)
-                  .build();
+        WishlistItemEntity wishlistItem2 = wishlistItemMapper.toEntity(articleEntity,wishlistEntity);
         WishlistItemEntity savedWishlistItem=wishlistItemRepository.save(wishlistItem2);
         long durationMs = Tools.getDurationMs(start);
         logger.info("L'article {} a bien été ajouté à la liste d'envie {},durationMs={}",savedWishlistItem.getArticle().getIdArticle(),savedWishlistItem.getWishlist().getIdWishlist(),durationMs);
-        return new WishlistAddItemOutputDto(savedWishlistItem.getWishlist().getIdWishlist(), savedWishlistItem.getArticle().getIdArticle(),savedWishlistItem.getWishlist().getUser().getId(),savedWishlistItem.getWishlist().getName(),savedWishlistItem.getWishlist().getDescription());
+        return wishlistItemMapper.toAddDto(savedWishlistItem);
     }
 
     public void deleteWishlistItem(Long idWishList, WishlistAddItemInputDto wishlistAddItemInputDto){

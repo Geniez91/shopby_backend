@@ -3,6 +3,7 @@ package org.shopby_backend.users.controller;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.users.dto.UserUpdateRoleDto;
+import org.shopby_backend.users.dto.UsersDto;
 import org.shopby_backend.users.dto.UsersOutput;
 import org.shopby_backend.users.service.UsersService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +23,7 @@ public class AdminController {
     @PreAuthorize("hasAnyAuthority('USER_READ_ALL')")
     @GetMapping
 
-    public List<UsersOutput> findAllUsers(){
+    public List<UsersDto> findAllUsers(){
         return this.usersService.findAllUsers();
     }
 

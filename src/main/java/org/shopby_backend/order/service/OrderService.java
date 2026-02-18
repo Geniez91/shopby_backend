@@ -10,6 +10,8 @@ import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.order.dto.OrderGetByUserIdDto;
 import org.shopby_backend.order.dto.OrderInputDto;
 import org.shopby_backend.order.dto.OrderOutputDto;
+import org.shopby_backend.order.mapper.OrderItemMapper;
+import org.shopby_backend.order.mapper.OrderMapper;
 import org.shopby_backend.order.model.OrderEntity;
 import org.shopby_backend.order.model.OrderItemEntity;
 import org.shopby_backend.order.model.OrderItemId;
@@ -39,6 +41,8 @@ public class OrderService {
     private StatusRepository statusRepository;
     private ArticleRepository articleRepository;
     private OrderTools orderTools;
+    private OrderMapper orderMapper;
+    private OrderItemMapper orderItemMapper;
 
     public OrderOutputDto addNewOrder(OrderInputDto orderInputDto) {
         long start = System.nanoTime();
@@ -61,26 +65,13 @@ public class OrderService {
         LocalDate currentDate = LocalDate.now();
         LocalDate dateDelivery = currentDate.plusDays(2);
 
-        OrderEntity orderEntity = OrderEntity.builder()
-                .deliveryAdress(orderInputDto.deliveryAddress())
-                .totalPrice(orderInputDto.totalPrice())
-                .status(status)
-                .dateOrder(currentDate)
-                .dateDelivery(dateDelivery)
-                .user(users)
-                .build();
+        OrderEntity orderEntity = orderMapper.toEntity(orderInputDto,status,currentDate,dateDelivery, users);
 
         OrderEntity savedOrderEntity = orderRepository.save(orderEntity);
 
         List<OrderItemEntity> items = orderInputDto.articlesQuantity().stream().map(article -> {
             ArticleEntity articleEntity = articleRepository.findById(article.getIdArticle()).orElseThrow(() -> new ArticleNotFoundException(article.getIdArticle()));
-            return OrderItemEntity.builder()
-                    .orderItemId(new OrderItemId(savedOrderEntity.getIdOrder(), articleEntity.getIdArticle()))
-                    .article(articleEntity)
-                    .order(savedOrderEntity)
-                    .quantity(article.getQuantity())
-                    .unitPrice(articleEntity.getPrice())
-                    .build();
+            return orderItemMapper.toEntity(orderEntity,articleEntity,article);
         }).toList();
         orderItemRepository.saveAll(items);
         long durationMs = Tools.getDurationMs(start);

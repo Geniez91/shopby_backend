@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.comment.dto.*;
+import org.shopby_backend.comment.mapper.CommentLikeMapper;
+import org.shopby_backend.comment.mapper.CommentMapper;
 import org.shopby_backend.comment.model.CommentEntity;
 import org.shopby_backend.comment.model.CommentLikeEntity;
 import org.shopby_backend.comment.persistence.CommentLikeRepository;
@@ -32,6 +34,8 @@ public class CommentService {
     private ArticleRepository articleRepository;
     private UsersRepository usersRepository;
     private CommentLikeRepository commentLikeRepository;
+    private CommentMapper commentMapper;
+    private CommentLikeMapper commentLikeMapper;
 
     public CommentOutputDto addComment(Long idArticle, CommentInputDto commentInputDto) {
         long start = System.nanoTime();
@@ -54,24 +58,12 @@ public class CommentService {
             return exception;
         });
 
-        CommentEntity commentEntity = CommentEntity.builder()
-                .description(commentInputDto.description())
-                .note(commentInputDto.note())
-                .user(user)
-                .article(article)
-                .build();
+        CommentEntity commentEntity = commentMapper.toEntity(commentInputDto, user, article);
 
         CommentEntity savedComment = commentRepository.save(commentEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le commentaire a bien été créer avec l'id {}, durationMs={}", savedComment.getIdComment(), durationMs);
-        return new CommentOutputDto(
-                savedComment.getIdComment(),
-                savedComment.getArticle().getIdArticle(),
-                savedComment.getUser().getId(),
-                savedComment.getDateComment(),
-                savedComment.getDescription(),
-                savedComment.getNote()
-        );
+        return commentMapper.toDto(savedComment);
     }
 
     public CommentOutputDto updateComment(Long idComment, CommentUpdateDto commentUpdateDto) {
@@ -93,14 +85,7 @@ public class CommentService {
         CommentEntity savedComment = commentRepository.save(commentEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le commentaire a bien été mise à jour avec l'id {}, durationMs={}", savedComment.getIdComment(), durationMs);
-        return new CommentOutputDto(
-                savedComment.getIdComment(),
-                savedComment.getArticle().getIdArticle(),
-                savedComment.getUser().getId(),
-                savedComment.getDateComment(),
-                savedComment.getDescription(),
-                savedComment.getNote()
-        );
+        return commentMapper.toDto(savedComment);
     }
 
     public void deleteComment(Long idComment) {
@@ -118,14 +103,7 @@ public class CommentService {
 
     public List<CommentOutputDto> getAllCommentsByArticleId(Long idArticle) {
         long start = System.nanoTime();
-        List<CommentOutputDto> commentOutputDto = commentRepository.findAllByIdArticle(idArticle).stream().map((commentEntity) -> new CommentOutputDto(
-                commentEntity.getIdComment(),
-                commentEntity.getArticle().getIdArticle(),
-                commentEntity.getUser().getId(),
-                commentEntity.getDateComment(),
-                commentEntity.getDescription(),
-                commentEntity.getNote()
-        )).toList();
+        List<CommentOutputDto> commentOutputDto = commentRepository.findAllByIdArticle(idArticle).stream().map((commentEntity) ->commentMapper.toDto(commentEntity)).toList();
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre de commentaire est de {} pour l'article {},durationMs={}", commentOutputDto.size(), idArticle, durationMs);
         return commentOutputDto;
@@ -140,14 +118,7 @@ public class CommentService {
         });
         long durationMs = Tools.getDurationMs(start);
         log.info("Le commentaire {} a bien été affiché, durationMs={}",idComment,durationMs);
-        return new CommentOutputDto(
-                commentEntity.getIdComment(),
-                commentEntity.getArticle().getIdArticle(),
-                commentEntity.getUser().getId(),
-                commentEntity.getDateComment(),
-                commentEntity.getDescription(),
-                commentEntity.getNote()
-        );
+        return commentMapper.toDto(commentEntity);
     }
 
     public CommentLikeOutputDto addCommentLike(Long idComment, CommentLikeInputDto commentLikeInputDto) {
@@ -170,17 +141,11 @@ public class CommentService {
             return exception;
         });
 
-        CommentLikeEntity commentLikeEntity = CommentLikeEntity.builder()
-                .comment(commentEntity)
-                .user(usersEntity)
-                .build();
+        CommentLikeEntity commentLikeEntity = commentLikeMapper.toEntity(commentEntity, usersEntity);
         CommentLikeEntity savedCommentLike = commentLikeRepository.save(commentLikeEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le like sur le commentaire a bien été créer avec l'id {}, durationMs={}", savedCommentLike.getId(), durationMs);
-        return new CommentLikeOutputDto(
-                savedCommentLike.getComment().getIdComment(),
-                savedCommentLike.getComment().getUser().getId()
-        );
+        return commentLikeMapper.toDto(savedCommentLike);
     }
 
     public void deleteCommentLike(Long idComment, CommentLikeInputDto commentLikeInputDto) {

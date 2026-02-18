@@ -77,7 +77,7 @@ public class UsersController {
     @PreAuthorize("hasAnyAuthority('USER_UPDATE')")
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/user/{userId}")
-    public UserOutputInfoUpdateDto updateUserInfo(@PathVariable Long userId,@RequestBody UserInfoUpdateDto userInfoUpdate){
+    public UsersDto updateUserInfo(@PathVariable Long userId,@RequestBody UserInfoUpdateDto userInfoUpdate){
         return usersService.updateUserInfo(userId,userInfoUpdate);
     }
 

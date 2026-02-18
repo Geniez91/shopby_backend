@@ -45,7 +45,7 @@ class UsersControllerTest {
     void shouldAddUser() throws Exception {
         /// Arrange
         UserInputDto inputDto = new UserInputDto("Jeremy", "Weltmann", "test123", "jeremy@example.com","France");
-        UsersDto user = new UsersDto(1L,inputDto.nom(),inputDto.prenom(),inputDto.email(),inputDto.password(), inputDto.country());
+        UsersDto user = new UsersDto(1L,inputDto.nom(),inputDto.prenom(),inputDto.email(),inputDto.password(), inputDto.country(),null,null);
         when(usersService.addUser(inputDto)).thenReturn(user);
 
         mockMvc.perform(post("/register")
@@ -59,7 +59,7 @@ class UsersControllerTest {
     void shouldUpdateUserInfo() throws Exception {
         ///Arrange
         UserInfoUpdateDto userInfoUpdateDto=new UserInfoUpdateDto("Jeremy","Weltmann","123","weltmannjeremy@gmail.com","France","10 rue des Tulipes","10 rue des Tulipes");
-        UserOutputInfoUpdateDto user=new UserOutputInfoUpdateDto(1L,userInfoUpdateDto.prenom(),userInfoUpdateDto.nom(),userInfoUpdateDto.password(),userInfoUpdateDto.email(),userInfoUpdateDto.country(),userInfoUpdateDto.deliveryAddress(),userInfoUpdateDto.billingAddress());
+        UsersDto user=new UsersDto(1L,userInfoUpdateDto.prenom(),userInfoUpdateDto.nom(),userInfoUpdateDto.password(),userInfoUpdateDto.email(),userInfoUpdateDto.country(),userInfoUpdateDto.deliveryAddress(),userInfoUpdateDto.billingAddress());
         when(usersService.updateUserInfo(1L,userInfoUpdateDto)).thenReturn(user);
 
         mockMvc.perform(patch("/user/{userId}",1L)
