@@ -3,6 +3,9 @@ package org.shopby_backend.exception;
 import org.shopby_backend.exception.article.*;
 import org.shopby_backend.exception.articlePhoto.ArticlePhotoUploadException;
 import org.shopby_backend.exception.brand.*;
+import org.shopby_backend.exception.comment.CommentAlreadyExistsException;
+import org.shopby_backend.exception.comment.CommentLikeAlreadyExistsException;
+import org.shopby_backend.exception.comment.CommentNotFoundException;
 import org.shopby_backend.exception.order.*;
 import org.shopby_backend.exception.status.*;
 import org.shopby_backend.exception.typeArticle.*;
@@ -185,6 +188,29 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleWishlistNotFound(WishlistNotFoundException ex){
         return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
     }
+
+
+
+
+        /* =========================
+       Comment EXCEPTIONS
+       ========================= */
+    @ExceptionHandler(CommentAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail>handleCommentAlreadyExists(CommentAlreadyExistsException ex){
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
+    }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<ProblemDetail>handleCommentNotFound(CommentNotFoundException ex){
+        return buildProblemDetail(HttpStatus.NOT_FOUND,ex);
+    }
+
+    @ExceptionHandler(CommentLikeAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail>handleCommentLikeAlreadyExists(CommentLikeAlreadyExistsException ex){
+        return buildProblemDetail(HttpStatus.CONFLICT,ex);
+    }
+
+
 
     /* =========================
        UTILS

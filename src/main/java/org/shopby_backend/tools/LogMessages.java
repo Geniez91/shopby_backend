@@ -28,6 +28,9 @@ public final class LogMessages {
         public static final String WISHLIST_NOT_FOUND_BY_ID="L'id de la liste d'envie ne correspond a aucun liste avec l'id {}";
         public static final String ARTICLE_ID_ALREADY_EXISTS_IN_WISHLIST_ID="L'article est deja dans votre liste d'envie avec l'id wishlist {} et l'id article : {}";
         public static final String WISHLIST_ITEM_NOT_FOUND_BY_WISHLIST_ID_AND_ARTICLE_ID="L'id de liste d'envie et de l'article ne correpond a aucun article d'une liste d'envie avec idWishlist {} et idArticle : {}";
-
+        public static final String COMMENT_ALREADY_EXISTS="Le commentaire existe deja avec idArticle : {} et idUser : {}";
+        public static final String COMMENT_NOT_FOUND="Aucune commentaire ne correspond à l'id du commentaire : {}";
+        public static final String COMMENT_LIKE_ALREADY_EXISTS="Le commentaire est deja like avec idComment : {} , idUser : {}";
+        public static final String COMMENT_LIKE_NOT_FOUND="Aucune like sur commentaire ne correspond à l'id du commentaire : {}";
     }
 
