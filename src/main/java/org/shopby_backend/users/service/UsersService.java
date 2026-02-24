@@ -25,10 +25,10 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class UsersService implements UserDetailsService {
-    private UsersRepository usersRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private ValidationService validationService;
-    private UsersMapper usersMapper;
+    private final UsersRepository usersRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final ValidationService validationService;
+    private final UsersMapper usersMapper;
 
     public UsersDto addUser(UserInputDto userInputDto) {
         long start = System.nanoTime();
@@ -70,13 +70,7 @@ public class UsersService implements UserDetailsService {
             throw exception;
         }
 
-        UsersEntity userExist=this.usersRepository.findById(validation.getUser().getId()).orElseThrow(()->
-        {
-            UsersNotFoundException exception = UsersNotFoundException.byUserId(validation.getUser().getId());
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,validation.getUser().getId(),exception);
-            return exception;
-        });
-
+        UsersEntity userExist=this.findUsersOrThrow(validation.getUser().getId());
         userExist.setEnabled(true);
         this.usersRepository.save(userExist);
         long durationMs = Tools.getDurationMs(start);
@@ -110,12 +104,7 @@ public class UsersService implements UserDetailsService {
     public void newPassword(UserNewPasswordDto userNewPasswordDto){
         long start = System.nanoTime();
         /// On recherche l'utilisateur par son adresse mail
-        UsersEntity user=usersRepository.findByEmail(userNewPasswordDto.email()).orElseThrow(()->{
-            NewPasswordException exception = new NewPasswordException(userNewPasswordDto.email());
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_EMAIL,userNewPasswordDto.email(),exception);
-            return exception;
-        });
-
+        UsersEntity user=this.findUsersByEmailOrThrow(userNewPasswordDto.email());
         /// On regarde si le code donnait correspond
         final ValidationEntity validation=this.validationService.readCode(userNewPasswordDto.code());
 
@@ -138,12 +127,7 @@ public class UsersService implements UserDetailsService {
 
     public void updateUserRole(UserUpdateRoleDto userInputDto){
         long start = System.nanoTime();
-        UsersEntity user=this.usersRepository.findByEmail(userInputDto.email()).orElseThrow(()->{
-            UsersNotFoundException exception =  UsersNotFoundException.byEmail(userInputDto.email());
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_EMAIL,userInputDto.email(),exception);
-            return exception;
-        });
-
+        UsersEntity user=this.findUsersByEmailOrThrow(userInputDto.email());
         final RoleEntity roleAdmin=new RoleEntity();
         roleAdmin.setLibelle(userInputDto.role());
         user.setRole(roleAdmin);
@@ -154,12 +138,7 @@ public class UsersService implements UserDetailsService {
 
     public UsersDto updateUserInfo(Long idUser, UserInfoUpdateDto userInfoUpdate){
         long start = System.nanoTime();
-        UsersEntity user = usersRepository.findById(idUser).orElseThrow(() ->
-        {
-            UsersNotFoundException exception = UsersNotFoundException.byUserId(idUser);
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,idUser,exception);
-            return exception;
-        });
+        UsersEntity user = this.findUsersOrThrow(idUser);
 
         if(userInfoUpdate.prenom()!=null&& !userInfoUpdate.prenom().isBlank()){
             user.setPrenom(userInfoUpdate.prenom());
@@ -193,4 +172,21 @@ public class UsersService implements UserDetailsService {
         log.info("L'utilisateur {} a bien été mise à jour, durationMs = {}",savedUsers.getId(),durationMs);
         return usersMapper.toDto(savedUsers);
     }
+    public UsersEntity findUsersOrThrow(Long idUser){
+       return usersRepository.findById(idUser).orElseThrow(() -> {
+            UsersNotFoundException exception = UsersNotFoundException.byUserId(idUser);
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID, idUser, exception);
+            return exception;
+        });
+    }
+
+    public UsersEntity findUsersByEmailOrThrow(String email){
+        return usersRepository.findByEmail(email).orElseThrow(()->{
+            NewPasswordException exception = new NewPasswordException(email);
+            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_EMAIL,email,exception);
+            return exception;
+        });
+    }
+
+
 }

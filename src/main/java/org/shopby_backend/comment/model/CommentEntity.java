@@ -34,4 +34,7 @@ public class CommentEntity {
     private String description;
 
     private int note;
+
+    @Version
+    private Long version;
 }

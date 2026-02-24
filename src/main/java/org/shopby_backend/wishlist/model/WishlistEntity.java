@@ -30,4 +30,7 @@ public class WishlistEntity {
 
     @Column(name = "updated_at")
     private Date updatedDate;
+
+    @Version
+    private Long version;
 }

@@ -45,13 +45,17 @@ public class ValidationService {
 
     public ValidationEntity readCode(String code){
         long start = System.nanoTime();
-        ValidationEntity validation=validationRepository.findByCode(code).orElseThrow(()->{
+        ValidationEntity validation=this.findValidationByCodeOrThrow(code);
+        long durationMs = Tools.getDurationMs(start);;
+        logger.info("Le code {} est bien présent dans la base de données, durationMs = {}",code,durationMs);
+        return validation;
+    }
+
+    public ValidationEntity findValidationByCodeOrThrow(String code){
+        return validationRepository.findByCode(code).orElseThrow(()->{
             ValidationNotFoundException exception = new ValidationNotFoundException(code);
             logger.error(LogMessages.VALIDATION_NOT_FOUND_BY_CODE,code);
             return exception;
         });
-        long durationMs = Tools.getDurationMs(start);;
-        logger.info("Le code {} est bien présent dans la base de données, durationMs = {}",code,durationMs);
-        return validation;
     }
 }

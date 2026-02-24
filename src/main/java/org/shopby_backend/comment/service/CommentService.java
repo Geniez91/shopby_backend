@@ -5,6 +5,7 @@ import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
+import org.shopby_backend.article.service.ArticleService;
 import org.shopby_backend.comment.dto.*;
 import org.shopby_backend.comment.mapper.CommentLikeMapper;
 import org.shopby_backend.comment.mapper.CommentMapper;
@@ -17,12 +18,12 @@ import org.shopby_backend.exception.comment.CommentAlreadyExistsException;
 import org.shopby_backend.exception.comment.CommentLikeAlreadyExistsException;
 import org.shopby_backend.exception.comment.CommentLikeNotFoundException;
 import org.shopby_backend.exception.comment.CommentNotFoundException;
-import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
-import org.shopby_backend.users.persistence.UsersRepository;
+import org.shopby_backend.users.service.UsersService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,33 +31,25 @@ import java.util.List;
 @Service
 @Slf4j
 public class CommentService {
-    private CommentRepository commentRepository;
-    private ArticleRepository articleRepository;
-    private UsersRepository usersRepository;
-    private CommentLikeRepository commentLikeRepository;
-    private CommentMapper commentMapper;
-    private CommentLikeMapper commentLikeMapper;
+    private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
+    private final CommentMapper commentMapper;
+    private final CommentLikeMapper commentLikeMapper;
+    private final ArticleService articleService;
+    private final UsersService usersService;
 
+    @Transactional
     public CommentOutputDto addComment(Long idArticle, CommentInputDto commentInputDto) {
         long start = System.nanoTime();
 
-        if (commentRepository.existsByIdArticleAndIdUser(idArticle, commentInputDto.idUser())) {
+        if (commentRepository.existsByArticle_IdArticleAndUser_Id(idArticle, commentInputDto.idUser())) {
             CommentAlreadyExistsException exception = new CommentAlreadyExistsException(idArticle, commentInputDto.idUser());
             log.warn(LogMessages.COMMENT_ALREADY_EXISTS, idArticle, commentInputDto.idUser());
             throw exception;
         }
 
-        ArticleEntity article = articleRepository.findById(idArticle).orElseThrow(() -> {
-            ArticleNotFoundException exception = new ArticleNotFoundException(idArticle);
-            log.warn(LogMessages.ARTICLE_NOT_FOUND, idArticle);
-            return exception;
-        });
-
-        UsersEntity user = usersRepository.findById(commentInputDto.idUser()).orElseThrow(() -> {
-            UsersNotFoundException exception = UsersNotFoundException.byUserId(commentInputDto.idUser());
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID, commentInputDto.idUser(), exception);
-            return exception;
-        });
+        ArticleEntity article = articleService.findArticleOrThrow(idArticle);
+        UsersEntity user = usersService.findUsersOrThrow(commentInputDto.idUser());
 
         CommentEntity commentEntity = commentMapper.toEntity(commentInputDto, user, article);
 
@@ -66,13 +59,10 @@ public class CommentService {
         return commentMapper.toDto(savedComment);
     }
 
+    @Transactional
     public CommentOutputDto updateComment(Long idComment, CommentUpdateDto commentUpdateDto) {
         long start = System.nanoTime();
-        CommentEntity commentEntity = commentRepository.findById(idComment).orElseThrow(() -> {
-            CommentNotFoundException exception = new CommentNotFoundException(idComment);
-            log.warn(LogMessages.COMMENT_NOT_FOUND, idComment);
-            return exception;
-        });
+        CommentEntity commentEntity = this.findCommentOrThrow(idComment);
 
         if (commentUpdateDto.description() != null) {
             commentEntity.setDescription(commentUpdateDto.description());
@@ -88,13 +78,10 @@ public class CommentService {
         return commentMapper.toDto(savedComment);
     }
 
+    @Transactional
     public void deleteComment(Long idComment) {
         long start = System.nanoTime();
-        CommentEntity commentEntity = commentRepository.findById(idComment).orElseThrow(() -> {
-            CommentNotFoundException exception = new CommentNotFoundException(idComment);
-            log.warn(LogMessages.COMMENT_NOT_FOUND, idComment);
-            return exception;
-        });
+        CommentEntity commentEntity = this.findCommentOrThrow(idComment);
 
         commentRepository.delete(commentEntity);
         long durationMs = Tools.getDurationMs(start);
@@ -103,7 +90,7 @@ public class CommentService {
 
     public List<CommentOutputDto> getAllCommentsByArticleId(Long idArticle) {
         long start = System.nanoTime();
-        List<CommentOutputDto> commentOutputDto = commentRepository.findAllByIdArticle(idArticle).stream().map((commentEntity) ->commentMapper.toDto(commentEntity)).toList();
+        List<CommentOutputDto> commentOutputDto = commentRepository.findAllByArticle_IdArticle(idArticle).stream().map((commentEntity) ->commentMapper.toDto(commentEntity)).toList();
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre de commentaire est de {} pour l'article {},durationMs={}", commentOutputDto.size(), idArticle, durationMs);
         return commentOutputDto;
@@ -111,35 +98,25 @@ public class CommentService {
 
     public CommentOutputDto getCommentById(Long idComment) {
         long start = System.nanoTime();
-        CommentEntity commentEntity= commentRepository.findById(idComment).orElseThrow(()->{
-            CommentNotFoundException exception = new CommentNotFoundException(idComment);
-            log.warn(LogMessages.COMMENT_NOT_FOUND, idComment);
-            return exception;
-        });
+        CommentEntity commentEntity= this.findCommentOrThrow(idComment);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le commentaire {} a bien été affiché, durationMs={}",idComment,durationMs);
         return commentMapper.toDto(commentEntity);
     }
 
+    @Transactional
     public CommentLikeOutputDto addCommentLike(Long idComment, CommentLikeInputDto commentLikeInputDto) {
         long start = System.nanoTime();
 
-        if(commentLikeRepository.existsByUserIdAndCommentId(commentLikeInputDto.idUser(), idComment)) {
+        if(commentLikeRepository.existsByUser_IdAndComment_IdComment(commentLikeInputDto.idUser(), idComment)) {
             CommentLikeAlreadyExistsException exception = new CommentLikeAlreadyExistsException(commentLikeInputDto.idUser(), idComment);
             log.warn(LogMessages.COMMENT_LIKE_ALREADY_EXISTS, idComment,commentLikeInputDto.idUser());
+            throw exception;
         }
 
-        CommentEntity commentEntity = commentRepository.findById(idComment).orElseThrow(()->{
-            CommentNotFoundException exception = new CommentNotFoundException(idComment);
-            log.warn(LogMessages.COMMENT_NOT_FOUND, idComment);
-            return exception;
-        });
+        CommentEntity commentEntity = this.findCommentOrThrow(idComment);
 
-        UsersEntity usersEntity = usersRepository.findById(commentLikeInputDto.idUser()).orElseThrow(()->{
-            UsersNotFoundException exception = UsersNotFoundException.byUserId(commentLikeInputDto.idUser());
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID, commentLikeInputDto.idUser());
-            return exception;
-        });
+        UsersEntity usersEntity = usersService.findUsersOrThrow(commentLikeInputDto.idUser());
 
         CommentLikeEntity commentLikeEntity = commentLikeMapper.toEntity(commentEntity, usersEntity);
         CommentLikeEntity savedCommentLike = commentLikeRepository.save(commentLikeEntity);
@@ -148,14 +125,11 @@ public class CommentService {
         return commentLikeMapper.toDto(savedCommentLike);
     }
 
+    @Transactional
     public void deleteCommentLike(Long idComment, CommentLikeInputDto commentLikeInputDto) {
         long start = System.nanoTime();
 
-        CommentLikeEntity commentLikeEntity = commentLikeRepository.findByUserIdAndCommentId(commentLikeInputDto.idUser(),idComment).orElseThrow(()->{
-            CommentLikeNotFoundException exception = new CommentLikeNotFoundException(idComment);
-            log.warn(LogMessages.COMMENT_LIKE_NOT_FOUND, idComment);
-            return exception;
-        });
+        CommentLikeEntity commentLikeEntity = findCommentLikeOrThrow(idComment,commentLikeInputDto);
         commentLikeRepository.delete(commentLikeEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le like sur le commentaire a bien été supprimé avec l'id commentaire {}, idUser {}, durationMs={}", idComment,commentLikeInputDto.idUser(), durationMs);
@@ -163,11 +137,27 @@ public class CommentService {
 
     public Long getLikeCount(Long idComment){
         long start = System.nanoTime();
-        List<CommentLikeEntity> listCommentLikeEntity = commentLikeRepository.findByCommentId(idComment);
+        List<CommentLikeEntity> listCommentLikeEntity = commentLikeRepository.findByComment_IdComment(idComment);
         long likeCount=listCommentLikeEntity.size();
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre de like commentaire est de {} pour le commentaire {},durationMs={}", likeCount, idComment, durationMs);
         return likeCount;
+    }
+
+    public CommentEntity findCommentOrThrow(Long idComment){
+        return commentRepository.findById(idComment).orElseThrow(() -> {
+            CommentNotFoundException exception = new CommentNotFoundException(idComment);
+            log.warn(LogMessages.COMMENT_NOT_FOUND, idComment);
+            return exception;
+        });
+    }
+
+    public CommentLikeEntity findCommentLikeOrThrow(Long idComment, CommentLikeInputDto commentLikeInputDto){
+        return commentLikeRepository.findByUser_IdAndComment_IdComment(commentLikeInputDto.idUser(),idComment).orElseThrow(()->{
+            CommentLikeNotFoundException exception = new CommentLikeNotFoundException(idComment);
+            log.warn(LogMessages.COMMENT_LIKE_NOT_FOUND, idComment);
+            return exception;
+        });
     }
 
 

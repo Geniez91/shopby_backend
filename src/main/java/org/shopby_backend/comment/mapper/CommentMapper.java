@@ -25,7 +25,8 @@ public class CommentMapper {
                 commentEntity.getUser().getId(),
                 commentEntity.getDateComment(),
                 commentEntity.getDescription(),
-                commentEntity.getNote()
+                commentEntity.getNote(),
+                commentEntity.getVersion()
         );
     }
 }

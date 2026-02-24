@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
-    boolean existsByIdArticleAndIdUser(Long idArticle, Long idUser);
-   List<CommentEntity> findAllByIdArticle(Long idArticle);
+    boolean existsByArticle_IdArticleAndUser_Id(Long idArticle, Long idUser);
+   List<CommentEntity> findAllByArticle_IdArticle(Long idArticle);
 }

@@ -5,6 +5,7 @@ import org.shopby_backend.exception.status.StatusAlreadyExistsException;
 import org.shopby_backend.exception.status.StatusGetException;
 import org.shopby_backend.exception.status.StatusNotFoundException;
 import org.shopby_backend.exception.status.StatusUpdateException;
+import org.shopby_backend.order.model.OrderStatus;
 import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
 import org.shopby_backend.status.mapper.StatusMapper;
@@ -13,6 +14,7 @@ import org.shopby_backend.status.persistence.StatusRepository;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,9 +22,10 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class StatusService {
-    private StatusRepository statusRepository;
-    private StatusMapper statusMapper;
+    private final StatusRepository statusRepository;
+    private final StatusMapper statusMapper;
 
+    @Transactional
     public StatusOutputDto addNewStatus(StatusInputDto statusInputDto) {
         long start = System.nanoTime();
 
@@ -38,15 +41,11 @@ public class StatusService {
         return statusMapper.toDto(savedEntity);
     }
 
+    @Transactional
     public StatusOutputDto updateStatus(Long idStatus,StatusInputDto statusInputDto) {
         long start = System.nanoTime();
 
-        StatusEntity status=statusRepository.findById(idStatus).orElseThrow(()->
-        {
-            StatusNotFoundException exception = StatusNotFoundException.byId(idStatus);
-            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
-            return exception;
-        });
+        StatusEntity status=this.findStatusByIdOrThrow(idStatus);
 
         status.setLibelle(statusInputDto.libelle());
         StatusEntity savedStatus=statusRepository.save(status);
@@ -55,14 +54,10 @@ public class StatusService {
         return statusMapper.toDto(savedStatus);
     }
 
+    @Transactional
     public void deleteStatus(Long idStatus) {
         long start = System.nanoTime();
-        StatusEntity status=statusRepository.findById(idStatus).orElseThrow(()->
-        {
-            StatusNotFoundException exception =  StatusNotFoundException.byId(idStatus);
-            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
-            return exception;
-        });
+        StatusEntity status=this.findStatusByIdOrThrow(idStatus);
 
         statusRepository.delete(status);
         long durationMs = Tools.getDurationMs(start);
@@ -71,12 +66,7 @@ public class StatusService {
 
     public StatusOutputDto getStatus(Long idStatus) {
         long start = System.nanoTime();
-        StatusEntity status=statusRepository.findById(idStatus).orElseThrow(()->
-        {
-            StatusNotFoundException exception = StatusNotFoundException.byId(idStatus);
-            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
-            return exception;
-        });
+        StatusEntity status=this.findStatusByIdOrThrow(idStatus);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le status {} est bien présent, durationMs = {}", status.getIdStatus(), durationMs);
         return statusMapper.toDto(status);
@@ -88,6 +78,24 @@ public class StatusService {
       long durationMs = Tools.getDurationMs(start);
       log.info("Il ya plus de {} status dans la base de données, durationMs = {}", listStatusDto.size(), durationMs);
       return listStatusDto;
+    }
+
+    public StatusEntity findStatusByLibelleOrThrow(String libelle) {
+       return statusRepository.findByLibelle(libelle).orElseThrow(() ->
+        {
+            StatusNotFoundException exception =  StatusNotFoundException.byOrderStatus(OrderStatus.valueOf(libelle));
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ORDER_STATUS,libelle,exception);
+            return exception;
+        });
+    }
+
+    public StatusEntity findStatusByIdOrThrow(Long idStatus) {
+        return statusRepository.findById(idStatus).orElseThrow(()->
+        {
+            StatusNotFoundException exception = StatusNotFoundException.byId(idStatus);
+            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ID, idStatus, exception);
+            return exception;
+        });
     }
 
 }

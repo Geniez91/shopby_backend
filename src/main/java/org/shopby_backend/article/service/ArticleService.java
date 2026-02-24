@@ -1,5 +1,5 @@
 package org.shopby_backend.article.service;
-
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.dto.AddArticleInputDto;
@@ -7,21 +7,14 @@ import org.shopby_backend.article.dto.AddArticleOutputDto;
 import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.brand.model.BrandEntity;
+import org.shopby_backend.brand.service.BrandService;
 import org.shopby_backend.exception.article.*;
-import org.shopby_backend.exception.brand.BrandNotFoundException;
-import org.shopby_backend.exception.typeArticle.TypeArticleNotFoundException;
-import org.shopby_backend.order.service.OrderService;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
-import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
-import org.shopby_backend.brand.persistence.BrandRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,11 +22,12 @@ import java.util.Objects;
 @AllArgsConstructor
 @Service
 public class ArticleService {
-    private ArticleRepository articleRepository;
-    private BrandRepository brandRepository;
-    private TypeArticleRepository typeArticleRepository;
-    private ArticleMapper articleMapper;
+    private final ArticleRepository articleRepository;
+    private final ArticleMapper articleMapper;
+    private final BrandService brandService;
+    private final TypeArticleService typeArticleService;
 
+    @Transactional
     public AddArticleOutputDto addNewArticle(AddArticleInputDto addArticleInputDto){
         long start = System.nanoTime();
         if(articleRepository.existsByName(addArticleInputDto.nameArticle())){
@@ -42,19 +36,9 @@ public class ArticleService {
             throw exception;
         }
 
-        BrandEntity brandEntity = brandRepository.findById(addArticleInputDto.idBrand()).orElseThrow(()->
-        {
-            BrandNotFoundException exception = new BrandNotFoundException(addArticleInputDto.idBrand());
-            log.warn(LogMessages.BRAND_NOT_FOUND,addArticleInputDto.idBrand());
-            return exception;
-        });
+        BrandEntity brandEntity = brandService.findBrandOrThrow(addArticleInputDto.idBrand());
 
-        TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(addArticleInputDto.idType()).orElseThrow(()->
-        {
-            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(addArticleInputDto.idType());
-            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,addArticleInputDto.idType(),exception );
-            return exception;
-        });
+        TypeArticleEntity typeArticleEntity=typeArticleService.findTypeArticleOrThrow(addArticleInputDto.idType());
 
         ArticleEntity article = articleMapper.toEntity(addArticleInputDto,typeArticleEntity,brandEntity);
 
@@ -68,17 +52,13 @@ public class ArticleService {
                 brandEntity.getLibelle(),
                 typeArticleEntity.getLibelle(),
                 durationMs);
-
         return articleMapper.toDto(savedArticle);
     }
 
+    @Transactional
     public AddArticleOutputDto updateArticle(Long id,AddArticleInputDto addArticleInputDto){
         long start = System.nanoTime();
-        ArticleEntity articleEntity = articleRepository.findById(id).orElseThrow(()->{
-            ArticleNotFoundException exception = new ArticleNotFoundException(id);
-            log.warn(LogMessages.ARTICLE_NOT_FOUND,id );
-            return exception;
-        });
+        ArticleEntity articleEntity = this.findArticleOrThrow(id);
 
         if(addArticleInputDto.nameArticle()!=null){
             articleEntity.setName(addArticleInputDto.nameArticle());
@@ -94,22 +74,13 @@ public class ArticleService {
 
         if(addArticleInputDto.idBrand()!=null){
             if(!Objects.equals(articleEntity.getBrand().getIdBrand(), addArticleInputDto.idBrand())){
-                BrandEntity brandEntity= brandRepository.findByIdBrand(addArticleInputDto.idBrand()).orElseThrow(()->{
-                    BrandNotFoundException exception = new BrandNotFoundException(addArticleInputDto.idBrand());
-                    log.warn(LogMessages.BRAND_NOT_FOUND, addArticleInputDto.idBrand());
-                    return exception;
-                });
+                BrandEntity brandEntity= brandService.findBrandOrThrow(addArticleInputDto.idBrand());
                 articleEntity.setBrand(brandEntity);
             }
         }
         if(addArticleInputDto.idType()!=null){
             if(!Objects.equals(articleEntity.getTypeArticle().getIdTypeArticle(), addArticleInputDto.idType())){
-                TypeArticleEntity type=typeArticleRepository.findById(addArticleInputDto.idType()).orElseThrow(()->
-                {
-                    TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(addArticleInputDto.idType());
-                    log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,addArticleInputDto.idType(),exception);
-                    return exception;
-                });
+                TypeArticleEntity type=typeArticleService.findTypeArticleOrThrow(addArticleInputDto.idType());
                     articleEntity.setTypeArticle(type);
             }
         }
@@ -119,14 +90,10 @@ public class ArticleService {
         return articleMapper.toDto(updatedArticle);
     }
 
+    @Transactional
     public void deleteArticle(Long id){
         long start = System.nanoTime();
-        ArticleEntity articleEntity=articleRepository.findById(id).orElseThrow(()->
-        {
-            ArticleNotFoundException exception = new ArticleNotFoundException(id);
-            log.warn(LogMessages.ARTICLE_NOT_FOUND,id,exception);
-            return exception;
-        });
+        ArticleEntity articleEntity=this.findArticleOrThrow(id);
         articleRepository.delete(articleEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("L'article {} a bien été supprimé, durationMs = {}",articleEntity.getIdArticle(),durationMs);
@@ -142,13 +109,17 @@ public class ArticleService {
 
     public AddArticleOutputDto getArticleById(Long id){
         long start = System.nanoTime();
-        ArticleEntity articleEntity=articleRepository.findById(id).orElseThrow(()->{
-            ArticleNotFoundException exception = new ArticleNotFoundException(id);
-            log.warn(LogMessages.ARTICLE_NOT_FOUND,id,exception);
-            return exception;
-        });
+        ArticleEntity articleEntity=this.findArticleOrThrow(id);
         long durationMs = Tools.getDurationMs(start);
         log.info("L'article {} a bien été trouvé, durationMs = {}",articleEntity.getIdArticle(),durationMs);
         return articleMapper.toDto(articleEntity);
+    }
+
+    public ArticleEntity findArticleOrThrow(Long id){
+        return articleRepository.findById(id).orElseThrow(()->{
+            ArticleNotFoundException exception = new ArticleNotFoundException(id);
+            log.warn(LogMessages.ARTICLE_NOT_FOUND,id );
+            return exception;
+        });
     }
 }

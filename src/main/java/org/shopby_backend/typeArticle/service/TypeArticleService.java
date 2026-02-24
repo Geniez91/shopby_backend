@@ -3,7 +3,6 @@ package org.shopby_backend.typeArticle.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.exception.typeArticle.*;
-import org.shopby_backend.status.service.StatusService;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
@@ -11,9 +10,8 @@ import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
 import org.shopby_backend.typeArticle.mapper.TypeArticleMapper;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +22,7 @@ public class TypeArticleService {
     private TypeArticleRepository typeArticleRepository;
     private TypeArticleMapper typeArticleMapper;
 
+    @Transactional
     public TypeArticleOutputDto addTypeArticle(TypeArticleDto typeArticleDto) {
         long start = System.nanoTime();
 
@@ -38,13 +37,7 @@ public class TypeArticleService {
         Long parentId = null;
 
         if (typeArticleDto.parentId() != null) {
-            TypeArticleEntity parent = typeArticleRepository.findById(typeArticleDto.parentId()).orElseThrow(() ->
-            {
-                TypeArticleNotFoundException exception = TypeArticleNotFoundException.byParentId(typeArticleDto.parentId());
-                log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_PARENT_ID,typeArticleDto.parentId(), exception);
-                return exception;
-            });
-
+            TypeArticleEntity parent = this.findTypeArticleByParentIdOrThrow(typeArticleDto.parentId());
             typeArticleEntity.setParent(parent);
             parentId = parent.getIdTypeArticle();
         }
@@ -55,14 +48,10 @@ public class TypeArticleService {
         return typeArticleMapper.toDto(typeArticleEntity,parentId);
     }
 
+    @Transactional
     public TypeArticleOutputDto updateTypeArticle(Long idType,TypeArticleDto typeArticleDto) {
         long start = System.nanoTime();
-        TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idType).orElseThrow(()->
-        {
-            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idType);
-            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idType,exception);
-            return exception;
-        });
+        TypeArticleEntity typeArticleEntity=this.findTypeArticleOrThrow(idType);
 
         typeArticleEntity.setLibelle(typeArticleDto.libelle());
         TypeArticleEntity savedTypeArticle=typeArticleRepository.save(typeArticleEntity);
@@ -71,16 +60,10 @@ public class TypeArticleService {
         return typeArticleMapper.toDto(savedTypeArticle,savedTypeArticle.getParent().getIdTypeArticle());
     }
 
+    @Transactional
     public void deleteTypeArticle(Long idTypeArticle) {
         long start = System.nanoTime();
-
-        TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idTypeArticle).orElseThrow(()->
-        {
-            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idTypeArticle);
-            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idTypeArticle,exception);
-            return exception;
-        });
-
+        TypeArticleEntity typeArticleEntity=this.findTypeArticleOrThrow(idTypeArticle);
         typeArticleRepository.delete(typeArticleEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le type d'article {} a bien été supprimé, durationMs : {}",typeArticleEntity.getLibelle(),durationMs);
@@ -97,16 +80,27 @@ public class TypeArticleService {
 
     public TypeArticleOutputDto getTypeArticleById(Long idTypeArticle) {
         long start = System.nanoTime();
-
-        TypeArticleEntity typeArticleEntity=typeArticleRepository.findById(idTypeArticle).orElseThrow(()->
-        {
-            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idTypeArticle);
-            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idTypeArticle,exception);
-            return exception;
-        });
-
+        TypeArticleEntity typeArticleEntity=this.findTypeArticleOrThrow(idTypeArticle);
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe bien un type d'article {},durationMs : {}",typeArticleEntity.getLibelle(),durationMs);
         return typeArticleMapper.toDto(typeArticleEntity,typeArticleEntity.getParent().getIdTypeArticle());
+    }
+
+    public TypeArticleEntity findTypeArticleOrThrow(Long idTypeArticle) {
+       return typeArticleRepository.findById(idTypeArticle).orElseThrow(()->
+        {
+            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byId(idTypeArticle);
+            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_ID,idTypeArticle,exception );
+            return exception;
+        });
+    }
+
+    public TypeArticleEntity findTypeArticleByParentIdOrThrow(Long parentId) {
+        return typeArticleRepository.findById(parentId).orElseThrow(() ->
+        {
+            TypeArticleNotFoundException exception = TypeArticleNotFoundException.byParentId(parentId);
+            log.warn(LogMessages.TYPE_ARTICLE_NOT_FOUND_BY_PARENT_ID,parentId, exception);
+            return exception;
+        });
     }
 }

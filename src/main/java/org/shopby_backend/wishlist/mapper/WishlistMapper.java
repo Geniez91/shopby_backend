@@ -21,7 +21,8 @@ public class WishlistMapper {
                 entity.getIdWishlist(),
                 entity.getUser().getId(),
                 entity.getName(),
-                entity.getDescription()
+                entity.getDescription(),
+                entity.getVersion()
         );
     }
 

@@ -27,6 +27,8 @@ public class ArticleMapper {
                 articleEntity.getPrice(),
                 articleEntity.getTypeArticle().getLibelle(),
                 articleEntity.getBrand().getLibelle(),
-                articleEntity.getCreationDate());
+                articleEntity.getCreationDate(),
+                articleEntity.getVersion()
+        );
     };
 }

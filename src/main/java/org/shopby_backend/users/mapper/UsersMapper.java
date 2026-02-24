@@ -32,7 +32,8 @@ public class UsersMapper {
                usersEntity.getEmail(),
                usersEntity.getCountry(),
                usersEntity.getDeliveryAddress(),
-               usersEntity.getBillingAddress());
+               usersEntity.getBillingAddress(),
+               usersEntity.getVersion());
     }
     }
 

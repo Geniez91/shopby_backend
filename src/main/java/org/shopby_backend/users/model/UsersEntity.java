@@ -40,6 +40,9 @@ public class UsersEntity implements UserDetails {
 
     private Boolean enabled=false;
 
+    @Version
+    private Long version;
+
  @OneToOne(cascade = CascadeType.ALL)
     private RoleEntity role;
 

@@ -15,6 +15,7 @@ import org.shopby_backend.tools.ApiErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -226,6 +227,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(pd);
     }
 
+    /// Exception qui gère si des champs sont vides
     @ExceptionHandler(MethodArgumentNotValidException.class)
     private ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(MethodArgumentNotValidException ex){
         String message = ex.getBindingResult()
@@ -238,6 +240,13 @@ public class GlobalExceptionHandler {
                 message
         );
         return ResponseEntity.badRequest().body(pd);
+    }
+
+    /// Gérer les exceptions qui sont deja en cours de modification
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ProblemDetail>handleObjectOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex){
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,"La ressource à été modifié par un autre utilisateur");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
     }
 
 @ExceptionHandler(Exception.class)

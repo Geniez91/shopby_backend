@@ -42,4 +42,7 @@ public class OrderEntity {
     @JoinColumn(name = "id_user")
     private UsersEntity user;
 
+    @Version
+    private Long version;
+
 }

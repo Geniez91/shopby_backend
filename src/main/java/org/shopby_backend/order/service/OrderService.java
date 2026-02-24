@@ -2,11 +2,8 @@ package org.shopby_backend.order.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.model.ArticleEntity;
-import org.shopby_backend.article.persistence.ArticleRepository;
-import org.shopby_backend.exception.article.ArticleNotFoundException;
+import org.shopby_backend.article.service.ArticleService;
 import org.shopby_backend.exception.order.*;
-import org.shopby_backend.exception.status.StatusNotFoundException;
-import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.order.dto.OrderGetByUserIdDto;
 import org.shopby_backend.order.dto.OrderInputDto;
 import org.shopby_backend.order.dto.OrderOutputDto;
@@ -14,19 +11,20 @@ import org.shopby_backend.order.mapper.OrderItemMapper;
 import org.shopby_backend.order.mapper.OrderMapper;
 import org.shopby_backend.order.model.OrderEntity;
 import org.shopby_backend.order.model.OrderItemEntity;
-import org.shopby_backend.order.model.OrderItemId;
 import org.shopby_backend.order.model.OrderStatus;
 import org.shopby_backend.order.persistence.OrderItemRepository;
 import org.shopby_backend.order.persistence.OrderRepository;
 import org.shopby_backend.order.tools.OrderTools;
 import org.shopby_backend.status.model.StatusEntity;
-import org.shopby_backend.status.persistence.StatusRepository;
+import org.shopby_backend.status.service.StatusService;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
-import org.shopby_backend.users.persistence.UsersRepository;
+import org.shopby_backend.users.service.UsersService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -35,32 +33,23 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class OrderService {
-    private OrderRepository orderRepository;
-    private OrderItemRepository orderItemRepository;
-    private UsersRepository usersRepository;
-    private StatusRepository statusRepository;
-    private ArticleRepository articleRepository;
-    private OrderTools orderTools;
-    private OrderMapper orderMapper;
-    private OrderItemMapper orderItemMapper;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderMapper orderMapper;
+    private final OrderItemMapper orderItemMapper;
+    private final UsersService usersService;
+    private final StatusService statusService;
+    private final ArticleService articleService;
+    private final OrderTools orderTools;
 
+    @Transactional
     public OrderOutputDto addNewOrder(OrderInputDto orderInputDto) {
         long start = System.nanoTime();
 
-        UsersEntity users = usersRepository.findById(orderInputDto.idUser()).orElseThrow(() ->
-        {
-            UsersNotFoundException exception= UsersNotFoundException.byUserId(orderInputDto.idUser());
-            log.warn(LogMessages.USERS_NOT_FOUND_BY_USER_ID,orderInputDto.idUser(),exception);
-            return exception;
-        });
+        UsersEntity users = usersService.findUsersOrThrow(orderInputDto.idUser());
 
         String statusOrder="Commandés";
-        StatusEntity status = statusRepository.findByLibelle(statusOrder).orElseThrow(() ->
-        {
-            StatusNotFoundException exception =  StatusNotFoundException.byOrderStatus(OrderStatus.valueOf(statusOrder));
-            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ORDER_STATUS,statusOrder,exception);
-            return exception;
-        });
+        StatusEntity status = statusService.findStatusByLibelleOrThrow(statusOrder);
 
         LocalDate currentDate = LocalDate.now();
         LocalDate dateDelivery = currentDate.plusDays(2);
@@ -70,7 +59,7 @@ public class OrderService {
         OrderEntity savedOrderEntity = orderRepository.save(orderEntity);
 
         List<OrderItemEntity> items = orderInputDto.articlesQuantity().stream().map(article -> {
-            ArticleEntity articleEntity = articleRepository.findById(article.getIdArticle()).orElseThrow(() -> new ArticleNotFoundException(article.getIdArticle()));
+            ArticleEntity articleEntity = articleService.findArticleOrThrow(article.getIdArticle());
             return orderItemMapper.toEntity(orderEntity,articleEntity,article);
         }).toList();
         orderItemRepository.saveAll(items);
@@ -84,18 +73,9 @@ public class OrderService {
         long start = System.nanoTime();
         LocalDate local = LocalDate.now();
         OrderStatus statusOrder = OrderStatus.Commandés;
-        List<OrderEntity> orders = Collections.singletonList(orderRepository.findByDateOrderAndStatus_libelle(local,statusOrder.name()).orElseThrow(() ->
-        {
-            OrderNotFoundException exception = OrderNotFoundException.byStatusAndLocalDate(statusOrder,local);
-            log.warn(LogMessages.ORDER_NOT_FOUND_BY_DATE_AND_STATUS_ORDER,local,statusOrder,exception);
-            return exception;
-        }));
+        List<OrderEntity> orders = this.findOrdersByDateOrderAndStatus(local, OrderStatus.valueOf(statusOrder.name()));
 
-        StatusEntity status = statusRepository.findByLibelle(OrderStatus.LivraisonEnCours.name()).orElseThrow(() -> {
-            StatusNotFoundException exception = StatusNotFoundException.byOrderStatus(OrderStatus.LivraisonEnCours);
-            log.warn(LogMessages.STATUS_NOT_FOUND_BY_ORDER_STATUS, OrderStatus.LivraisonEnCours.name(),exception);
-            return exception;
-        });
+        StatusEntity status = statusService.findStatusByLibelleOrThrow(statusOrder.name());
 
         for (OrderEntity order : orders) {
             order.setStatus(status);
@@ -107,17 +87,9 @@ public class OrderService {
 
     public OrderOutputDto deleteOrder(Long orderId) {
         long start = System.nanoTime();
-        OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> {
-            OrderNotFoundException exception= OrderNotFoundException.byOrderId(orderId);
-            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
-            return exception;
-        });
+        OrderEntity order = this.findOrderOrThrow(orderId);
 
-        List<OrderItemEntity> orderItemEntities = orderItemRepository.findByOrder_IdOrder(order.getIdOrder()).orElseThrow(() -> {
-            OrderItemNotFoundException exception = new OrderItemNotFoundException(orderId);
-            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
-            return exception;
-        });
+        List<OrderItemEntity> orderItemEntities = this.findOrderItemByOrderIdOrThrow(orderId);
 
         orderItemRepository.deleteAll(orderItemEntities);
         orderRepository.deleteById(orderId);
@@ -128,12 +100,8 @@ public class OrderService {
 
     public OrderOutputDto getOrder(Long orderId) {
         long start = System.nanoTime();
-        OrderEntity orderEntity = orderRepository.findById(orderId).orElseThrow(() -> {
-            OrderNotFoundException exception =  OrderNotFoundException.byOrderId(orderId);
-            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
-            return exception;
-        });
-        List<OrderItemEntity> orderItemEntities = orderItemRepository.findByOrder_IdOrder(orderEntity.getIdOrder()).orElseThrow(() -> new OrderDeleteException("Aucun order item ne correspond a votre order id"));
+        OrderEntity orderEntity = this.findOrderOrThrow(orderId);
+        List<OrderItemEntity> orderItemEntities = this.findOrderItemByOrderIdOrThrow(orderId);
         OrderOutputDto result = orderTools.getOrderOutputDto(orderEntity, orderItemEntities);
         long durationMs = Tools.getDurationMs(start);
         log.info("La commande a bien été bien affiché : orderId={}, durationMs={}", orderId,durationMs);
@@ -143,24 +111,50 @@ public class OrderService {
     public List<OrderOutputDto> getOrdersByUserId(OrderGetByUserIdDto orderGetByUserIdDto) {
         long start = System.nanoTime();
 
-        List<OrderEntity> listOrderEntity = orderRepository.findByUser_Id(orderGetByUserIdDto.userId()).orElseThrow(()->
-        {
-            OrderNotFoundException exception = OrderNotFoundException.byUserId(orderGetByUserIdDto.userId());
-            log.warn(LogMessages.ORDER_NOT_FOUND_BY_USER_ID,orderGetByUserIdDto.userId(),exception);
-            return exception;
-        });
+        List<OrderEntity> listOrderEntity = this.findOrdersByUserId(orderGetByUserIdDto.userId());
 
         List<OrderOutputDto> result=  listOrderEntity.stream().map(order -> {
-            List<OrderItemEntity> items = orderItemRepository.findByOrder_IdOrder(order.getIdOrder()).orElseThrow(()->
-            {
-                OrderItemNotFoundException exception = new OrderItemNotFoundException(order.getIdOrder());
-                log.warn(LogMessages.ORDER_ITEM_NOT_FOUND_BY_ORDER_ID,order.getIdOrder(),exception);
-                return exception;
-            });
+            List<OrderItemEntity> items = this.findOrderItemByOrderIdOrThrow(order.getIdOrder());
             return orderTools.getOrderOutputDto(order, items);
         }).toList();
         long durationMs = Tools.getDurationMs(start);
         log.info("Les commandes ont été bien affiché : userId={}, orderCount={}, durationMs={}", orderGetByUserIdDto.userId(), result.size(), durationMs);
         return result;
     }
+
+    public OrderEntity findOrderOrThrow(Long orderId) {
+       return orderRepository.findById(orderId).orElseThrow(() -> {
+            OrderNotFoundException exception= OrderNotFoundException.byOrderId(orderId);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
+            return exception;
+        });
+    }
+
+    public List<OrderEntity>findOrdersByUserId(Long userId) {
+      return orderRepository.findByUser_Id(userId).orElseThrow(()->
+        {
+            OrderNotFoundException exception = OrderNotFoundException.byUserId(userId);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_USER_ID,userId,exception);
+            return exception;
+        });
+    }
+
+    public List<OrderEntity>findOrdersByDateOrderAndStatus(LocalDate local,OrderStatus status){
+        return Collections.singletonList(orderRepository.findByDateOrderAndStatus_libelle(local, String.valueOf(status)).orElseThrow(() ->
+        {
+            OrderNotFoundException exception = OrderNotFoundException.byStatusAndLocalDate(status,local);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_DATE_AND_STATUS_ORDER,local,status,exception);
+            return exception;
+        }));
+    }
+
+    public List<OrderItemEntity> findOrderItemByOrderIdOrThrow(Long orderId) {
+       return orderItemRepository.findByOrder_IdOrder(orderId).orElseThrow(() -> {
+            OrderItemNotFoundException exception = new OrderItemNotFoundException(orderId);
+            log.warn(LogMessages.ORDER_NOT_FOUND_BY_ID,orderId,exception);
+            return exception;
+        });
+    }
 }
+
+

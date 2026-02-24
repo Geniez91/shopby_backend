@@ -2,7 +2,6 @@ package org.shopby_backend.brand.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.shopby_backend.article.service.ArticleService;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.mapper.BrandMapper;
@@ -11,9 +10,8 @@ import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.*;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +22,7 @@ public class BrandService {
     private BrandRepository brandRepository;
     private BrandMapper brandMapper;
 
+    @Transactional
     public BrandOutputDto addBrand(BrandInputDto brandInputDto) {
         long start = System.nanoTime();
 
@@ -41,6 +40,7 @@ public class BrandService {
         return brandMapper.toDto(savedBrand);
     }
 
+    @Transactional
     public BrandOutputDto updateBrand(Long id,BrandInputDto updateBrandInputDto) {
         long start = System.nanoTime();
         if(id==null|| id==0){
@@ -50,11 +50,7 @@ public class BrandService {
             throw exception;
         }
 
-        BrandEntity existBrand = brandRepository.findByIdBrand(id).orElseThrow(()->{
-            BrandNotFoundException exception = new BrandNotFoundException(id);
-            log.warn(LogMessages.BRAND_NOT_FOUND,id,exception);
-            return exception;
-        });
+        BrandEntity existBrand = this.findBrandOrThrow(id);
 
         existBrand.setLibelle(updateBrandInputDto.libelle());
         BrandEntity updatedBrand=brandRepository.save(existBrand);
@@ -77,25 +73,27 @@ public class BrandService {
 
     public BrandOutputDto findBrandById(Long id) {
         long start = System.nanoTime();
-        BrandEntity brandEntity = brandRepository.findByIdBrand(id).orElseThrow(()->{
-            BrandNotFoundException exception = new BrandNotFoundException(id);
-            log.warn(LogMessages.BRAND_NOT_FOUND,id,exception);
-            return exception;
-        });
+        BrandEntity brandEntity = this.findBrandOrThrow(id);
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe plus une marque avec l'id brand {}, durationMs {}",brandEntity.getIdBrand(),durationMs);
         return brandMapper.toDto(brandEntity);
     }
 
+    @Transactional
     public void deleteBrand(Long id) {
         long start = System.nanoTime();
-        BrandEntity brandEntity = brandRepository.findByIdBrand(id).orElseThrow(()->{
-            BrandNotFoundException exception = new BrandNotFoundException(id);
-            log.warn(LogMessages.BRAND_NOT_FOUND,id,exception );
-            return exception;
-        });
+        BrandEntity brandEntity = this.findBrandOrThrow(id);
         brandRepository.delete(brandEntity);
         long durationMs = Tools.getDurationMs(start);
         log.info("La marque {} a bien été supprimé, durationsMs {}",brandEntity.getIdBrand(),durationMs);
+    }
+
+    public BrandEntity findBrandOrThrow(Long idBrand){
+       return brandRepository.findById(idBrand).orElseThrow(()->
+        {
+            BrandNotFoundException exception = new BrandNotFoundException(idBrand);
+            log.warn(LogMessages.BRAND_NOT_FOUND,idBrand);
+            return exception;
+        });
     }
 }

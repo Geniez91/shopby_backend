@@ -44,4 +44,7 @@ public class ArticleEntity {
 
     @OneToMany()
     private List<ArticlePhotoEntity> photos;
+
+    @Version
+    private Long version;
 }
