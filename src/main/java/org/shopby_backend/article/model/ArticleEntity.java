@@ -2,6 +2,7 @@ package org.shopby_backend.article.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.shopby_backend.articlePhoto.model.ArticlePhotoEntity;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
@@ -34,15 +35,15 @@ public class ArticleEntity {
 
     private Date creationDate;
 
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "id_brand")
     private BrandEntity brand;
 
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "id_type_article")
     private TypeArticleEntity typeArticle;
 
-    @OneToMany()
+    @OneToMany(mappedBy = "article",fetch = FetchType.LAZY)
     private List<ArticlePhotoEntity> photos;
 
     @Version

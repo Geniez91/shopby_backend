@@ -2,6 +2,7 @@ package org.shopby_backend.order.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.shopby_backend.article.model.ArticleEntity;
 
 import java.math.BigDecimal;

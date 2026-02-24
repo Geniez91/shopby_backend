@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
 import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
 import org.shopby_backend.typeArticle.service.TypeArticleService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,8 +42,8 @@ public class TypeArticleController {
 
     @PreAuthorize("hasAnyAuthority('TYPE_ARTICLE_READ_ALL')")
     @GetMapping
-    public List<TypeArticleOutputDto> getAllTypeArticle() {
-        return typeArticleService.getAllTypeArticle();
+    public Page<TypeArticleOutputDto> getAllTypeArticle(Pageable pageable) {
+        return typeArticleService.getAllTypeArticle(pageable);
     }
 
     @PreAuthorize("hasAnyAuthority('TYPE_ARTICLE_READ')")

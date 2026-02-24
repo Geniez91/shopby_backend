@@ -10,6 +10,8 @@ import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
 import org.shopby_backend.typeArticle.mapper.TypeArticleMapper;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,13 +71,14 @@ public class TypeArticleService {
         log.info("Le type d'article {} a bien été supprimé, durationMs : {}",typeArticleEntity.getLibelle(),durationMs);
     }
 
-    public List<TypeArticleOutputDto> getAllTypeArticle() {
+    public Page<TypeArticleOutputDto> getAllTypeArticle(Pageable pageable) {
         long start = System.nanoTime();
-        List<TypeArticleOutputDto> listTypeArticle = typeArticleRepository.findAll().stream().map((typeArticle)-> typeArticleMapper.toDto(typeArticle,typeArticle.getParent()
-                .getIdTypeArticle())).toList();
+        Page<TypeArticleEntity> page = typeArticleRepository.findAll(pageable);
         long durationMs = Tools.getDurationMs(start);
-        log.info("Il existe plus de {} type d'article dans la base de données,durationsMs : {}",listTypeArticle.size(),durationMs);
-        return listTypeArticle;
+        log.info("Il existe plus de {} type d'article dans la base de données,page : {} durationsMs : {}",page.getNumberOfElements(),page.getNumber(),durationMs);
+        return page.map(entity ->
+                typeArticleMapper.toDto(entity, entity.getParent().getIdTypeArticle())
+        );
     }
 
     public TypeArticleOutputDto getTypeArticleById(Long idTypeArticle) {

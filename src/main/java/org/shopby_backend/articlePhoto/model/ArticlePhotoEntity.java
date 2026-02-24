@@ -17,7 +17,7 @@ public class ArticlePhotoEntity {
    @Column(name = "id_photo")
    private Long idPhoto;
 
-   @ManyToOne()
+   @ManyToOne(fetch =  FetchType.LAZY)
    @JoinColumn(name = "id_article")
    private ArticleEntity article;
 

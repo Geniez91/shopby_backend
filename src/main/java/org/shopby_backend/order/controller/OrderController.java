@@ -5,6 +5,8 @@ import org.shopby_backend.order.dto.OrderGetByUserIdDto;
 import org.shopby_backend.order.dto.OrderInputDto;
 import org.shopby_backend.order.dto.OrderOutputDto;
 import org.shopby_backend.order.service.OrderService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,6 @@ public class OrderController {
         return orderService.addNewOrder(orderInputDto);
     }
 
-
     @DeleteMapping("/{orderId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public OrderOutputDto deleteOrder(@PathVariable Long orderId) {
@@ -37,8 +38,8 @@ public class OrderController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<OrderOutputDto> getOrdersByUserId(@RequestBody OrderGetByUserIdDto orderGetByUserIdDto) {
-        return orderService.getOrdersByUserId(orderGetByUserIdDto);
+    public Page<OrderOutputDto> getOrdersByUserId(@RequestBody OrderGetByUserIdDto orderGetByUserIdDto, Pageable pageable) {
+        return orderService.getOrdersByUserId(orderGetByUserIdDto,pageable);
     }
 
 

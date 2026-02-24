@@ -10,6 +10,8 @@ import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.*;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,16 +61,12 @@ public class BrandService {
         return brandMapper.toDto(updatedBrand);
     }
 
-    public List<BrandOutputDto> findAllBrands() {
+    public Page<BrandOutputDto> findAllBrands(Pageable pageable) {
         long start = System.nanoTime();
-
-        List<BrandOutputDto> listBrandOutputDto= brandRepository.findAll().stream().map(brandEntity ->
-        brandMapper.toDto(brandEntity)
-        ).toList();
-
+        Page<BrandEntity> page= brandRepository.findAll(pageable);
         long durationMs = Tools.getDurationMs(start);
-        log.info("Il existe plus de {} marques dans la base de données, durationMs {}",listBrandOutputDto.size(),durationMs);
-        return listBrandOutputDto;
+        log.info("Il existe plus de {} marques dans la base de données (page : {}), durationMs {}",page.getNumberOfElements(),page.getNumber(),durationMs);
+        return page.map(brandMapper::toDto);
     }
 
     public BrandOutputDto findBrandById(Long id) {

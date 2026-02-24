@@ -22,6 +22,8 @@ import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.service.UsersService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,12 +90,12 @@ public class CommentService {
         log.info("Le commentaire a bien été supprimé avec l'id {}, durationMs={}", idComment, durationMs);
     }
 
-    public List<CommentOutputDto> getAllCommentsByArticleId(Long idArticle) {
+    public Page<CommentOutputDto> getAllCommentsByArticleId(Long idArticle, Pageable pageable) {
         long start = System.nanoTime();
-        List<CommentOutputDto> commentOutputDto = commentRepository.findAllByArticle_IdArticle(idArticle).stream().map((commentEntity) ->commentMapper.toDto(commentEntity)).toList();
+        Page<CommentEntity> page = commentRepository.findAllByArticle_IdArticle(idArticle,pageable);
         long durationMs = Tools.getDurationMs(start);
-        log.info("Le nombre de commentaire est de {} pour l'article {},durationMs={}", commentOutputDto.size(), idArticle, durationMs);
-        return commentOutputDto;
+        log.info("Le nombre de commentaire est de {}, page : {} pour l'article {},durationMs={}", page.getNumberOfElements(),page.getNumber(), idArticle, durationMs);
+        return page.map(commentMapper::toDto);
     }
 
     public CommentOutputDto getCommentById(Long idComment) {

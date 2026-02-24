@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
 import org.shopby_backend.status.service.StatusService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +44,7 @@ public class StatusController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<StatusOutputDto> getAllStatus() {
-        return statusService.getAllStatus();
+    public Page<StatusOutputDto> getAllStatus(Pageable pageable) {
+        return statusService.getAllStatus(pageable);
     }
 }

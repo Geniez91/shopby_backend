@@ -3,6 +3,8 @@ package org.shopby_backend.comment.controller;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.comment.dto.*;
 import org.shopby_backend.comment.service.CommentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,8 +36,8 @@ public class CommentController {
 
     @GetMapping("/article/{idArticle}/comments")
     @ResponseStatus(HttpStatus.OK)
-    public List<CommentOutputDto> getAllCommentsByArticleId(@PathVariable Long idArticle){
-        return commentService.getAllCommentsByArticleId(idArticle);
+    public Page<CommentOutputDto> getAllCommentsByArticleId(@PathVariable Long idArticle, Pageable pageable){
+        return commentService.getAllCommentsByArticleId(idArticle,pageable);
     }
 
     @GetMapping("/comments/{idComment}")

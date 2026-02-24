@@ -6,6 +6,8 @@ import org.shopby_backend.users.dto.UserUpdateRoleDto;
 import org.shopby_backend.users.dto.UsersDto;
 import org.shopby_backend.users.dto.UsersOutput;
 import org.shopby_backend.users.service.UsersService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +25,9 @@ public class AdminController {
     @PreAuthorize("hasAnyAuthority('USER_READ_ALL')")
     @GetMapping
 
-    public List<UsersDto> findAllUsers(){
-        return this.usersService.findAllUsers();
+    public Page<UsersDto> findAllUsers(Pageable pageable){
+        return this.usersService.findAllUsers(pageable);
     }
-
 
     @PreAuthorize("hasAnyAuthority('USER_UPDATE_ROLE')")
     @PutMapping

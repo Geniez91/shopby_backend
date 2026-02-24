@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.service.BrandService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +36,8 @@ public class BrandController {
     @PreAuthorize("hasAnyAuthority('BRAND_READ_ALL')")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<BrandOutputDto> getAllBrands(){
-        return brandService.findAllBrands();
+    public Page<BrandOutputDto> getAllBrands(Pageable pageable){
+        return brandService.findAllBrands(pageable);
     }
 
     @PreAuthorize("hasAnyAuthority('BRAND_READ')")

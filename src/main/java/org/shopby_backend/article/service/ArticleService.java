@@ -1,4 +1,6 @@
 package org.shopby_backend.article.service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -99,12 +102,12 @@ public class ArticleService {
         log.info("L'article {} a bien été supprimé, durationMs = {}",articleEntity.getIdArticle(),durationMs);
     }
 
-    public List<AddArticleOutputDto> getAllArticles(){
+    public Page<AddArticleOutputDto> getAllArticles(Pageable pageable){
         long start = System.nanoTime();
-        List<AddArticleOutputDto> listArticle = articleRepository.findAll().stream().map(article-> articleMapper.toDto(article)).toList();
+        Page<ArticleEntity> page = articleRepository.findAll(pageable);
         long durationMs = Tools.getDurationMs(start);
-        log.info("{} articles ont été trouvés, durationMs = {}",listArticle.size(),durationMs);
-        return listArticle;
+        log.info("{} articles ont été trouvés (page {}, durationMs = {}",page.getSize(),page.getNumber(),durationMs);
+        return page.map(articleMapper::toDto);
     }
 
     public AddArticleOutputDto getArticleById(Long id){

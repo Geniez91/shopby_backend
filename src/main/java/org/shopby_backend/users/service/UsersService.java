@@ -12,6 +12,8 @@ import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -117,12 +119,12 @@ public class UsersService implements UserDetailsService {
         }
     }
 
-    public List<UsersDto> findAllUsers(){
+    public Page<UsersDto> findAllUsers(Pageable pageable){
         long start = System.nanoTime();
-        List<UsersDto> listUsers = this.usersRepository.findAll().stream().map(user->usersMapper.toDto(user)).toList();
+        Page<UsersEntity> page = this.usersRepository.findAll(pageable);
         long durationMs = Tools.getDurationMs(start);
-        log.info("Le nombre d'utilisateur dans la base de données est de {},durationMs = {}",listUsers.size(),durationMs);
-        return listUsers;
+        log.info("Le nombre d'utilisateur dans la base de données est de {}, page : {}, durationMs = {}",page.getNumberOfElements(),page.getNumber(),durationMs);
+        return page.map(usersMapper::toDto);
     }
 
     public void updateUserRole(UserUpdateRoleDto userInputDto){

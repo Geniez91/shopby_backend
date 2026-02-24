@@ -13,6 +13,8 @@ import org.shopby_backend.status.model.StatusEntity;
 import org.shopby_backend.status.persistence.StatusRepository;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,12 +74,12 @@ public class StatusService {
         return statusMapper.toDto(status);
     }
 
-    public List<StatusOutputDto> getAllStatus() {
+    public Page<StatusOutputDto> getAllStatus(Pageable pageable) {
       long start = System.nanoTime();
-      List<StatusOutputDto> listStatusDto= statusRepository.findAll().stream().map(statusEntity -> statusMapper.toDto(statusEntity)).toList();
+      Page<StatusEntity> page= statusRepository.findAll(pageable);
       long durationMs = Tools.getDurationMs(start);
-      log.info("Il ya plus de {} status dans la base de données, durationMs = {}", listStatusDto.size(), durationMs);
-      return listStatusDto;
+      log.info("Il ya plus de {} status dans la base de données,page : {}, durationMs = {}", page.getNumberOfElements(),page.getNumber(), durationMs);
+      return page.map(statusMapper::toDto);
     }
 
     public StatusEntity findStatusByLibelleOrThrow(String libelle) {

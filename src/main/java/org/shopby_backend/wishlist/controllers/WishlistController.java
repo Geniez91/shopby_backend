@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
 import org.shopby_backend.wishlist.dto.*;
 import org.shopby_backend.wishlist.service.WishlistService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,8 +44,8 @@ public class WishlistController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<WishlistOutputDto> getWishlists(@Valid @RequestBody WishListGetAllByIdDto wishListGetAllByIdDto){
-        return wishlistService.getAllWishListByUserId(wishListGetAllByIdDto);
+    public Page<WishlistOutputDto> getWishlists(@Valid @RequestBody WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
+        return wishlistService.getAllWishListByUserId(wishListGetAllByIdDto,pageable);
     }
 
     @PostMapping("/{wishlistId}")
@@ -60,7 +62,7 @@ public class WishlistController {
 
     @GetMapping("{wishlistId}")
     @ResponseStatus(HttpStatus.OK)
-    public List<AddArticleOutputDto> getAllArticlesByWishlistId(@PathVariable Long wishlistId){
-        return wishlistService.getAllArticleByWishlistId(wishlistId);
+    public Page<AddArticleOutputDto> getAllArticlesByWishlistId(@PathVariable Long wishlistId, Pageable pageable){
+        return wishlistService.getAllArticleByWishlistId(wishlistId,pageable);
     }
 }

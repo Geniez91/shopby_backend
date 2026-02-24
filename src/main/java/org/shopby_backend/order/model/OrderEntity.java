@@ -2,12 +2,14 @@ package org.shopby_backend.order.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.shopby_backend.status.model.StatusEntity;
 import org.shopby_backend.users.model.UsersEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -38,11 +40,14 @@ public class OrderEntity {
     @JoinColumn(name = "id_status")
     private StatusEntity status;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user")
     private UsersEntity user;
 
     @Version
     private Long version;
+
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    private List<OrderItemEntity> orderItems;
 
 }

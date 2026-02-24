@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.dto.AddArticleInputDto;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
 import org.shopby_backend.article.service.ArticleService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -43,8 +45,8 @@ public void deleteArticle(@PathVariable Long id){
 
 @GetMapping
 @ResponseStatus(HttpStatus.OK)
-public List<AddArticleOutputDto> getAllArticles(){
-    return articleService.getAllArticles();
+public Page<AddArticleOutputDto> getAllArticles(Pageable pageable){
+    return articleService.getAllArticles(pageable);
 }
 
 @GetMapping("/{id}")

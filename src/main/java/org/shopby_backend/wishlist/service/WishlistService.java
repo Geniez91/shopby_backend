@@ -3,6 +3,7 @@ package org.shopby_backend.wishlist.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
+import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.article.service.ArticleService;
@@ -24,6 +25,8 @@ import org.shopby_backend.wishlist.persistence.WishlistItemRepository;
 import org.shopby_backend.wishlist.persistence.WishlistRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +43,7 @@ public class WishlistService {
     private final WishlistItemMapper wishlistItemMapper;
     private final UsersService usersService;
     private final ArticleService articleService;
+    private final ArticleMapper articleMapper;
 
     @Transactional
     public WishlistOutputDto addWishList(WishlistInputDto wishlistInputDto) {
@@ -89,13 +93,13 @@ public class WishlistService {
        return wishlistMapper.toOutputDto(wishlistEntity);
     }
 
-    public List<WishlistOutputDto>getAllWishListByUserId(WishListGetAllByIdDto wishListGetAllByIdDto){
+    public Page<WishlistOutputDto>getAllWishListByUserId(WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
         long start = System.nanoTime();
         UsersEntity user=this.usersService.findUsersOrThrow(wishListGetAllByIdDto.userId());
-        List<WishlistOutputDto> listWishOutputDto = wishlistRepository.findByUserId(user.getId()).stream().map(wishlistEntity -> wishlistMapper.toOutputDto(wishlistEntity)).toList();
+        Page<WishlistEntity> page = wishlistRepository.findByUserId(user.getId(),pageable);
         long durationMs = Tools.getDurationMs(start);
-        log.info("Le nombre de list d'envie est de {} pour l'utilisateur {},durationMs={}",listWishOutputDto.size(),wishListGetAllByIdDto.userId(),durationMs);
-        return listWishOutputDto;
+        log.info("Le nombre de list d'envie est de {}, page : {} pour l'utilisateur {},durationMs={}",page.getNumberOfElements(),page.getNumber(),wishListGetAllByIdDto.userId(),durationMs);
+        return page.map(wishlistMapper::toOutputDto);
     }
 
     @Transactional
@@ -136,12 +140,12 @@ public class WishlistService {
         log.info("L'article {} a bien été supprimé de la liste d'envie {}, durationMs={}",articleEntity.getIdArticle(),wishlistItemEntity.getWishlist().getIdWishlist(),durationMs);
     }
 
-    public List<AddArticleOutputDto> getAllArticleByWishlistId(Long idWishList){
+    public Page<AddArticleOutputDto> getAllArticleByWishlistId(Long idWishList,Pageable pageable){
         long start = System.nanoTime();
-        List<WishlistItemEntity> wishlistItemEntityList=this.findWishlistItemsByWishlistIdOrThrow(idWishList);
-        List<AddArticleOutputDto> listArticle= wishlistItemEntityList.stream().map((wishlistItem)-> new AddArticleOutputDto(wishlistItem.getArticle().getIdArticle(),wishlistItem.getArticle().getName(),wishlistItem.getArticle().getDescription(),wishlistItem.getArticle().getPrice(),wishlistItem.getArticle().getBrand().getLibelle(),wishlistItem.getArticle().getTypeArticle().getLibelle(),wishlistItem.getArticle().getCreationDate(),wishlistItem.getWishlist().getVersion())).toList();
+        Page<WishlistItemEntity> wishlistItemEntityList=this.findWishlistItemsByWishlistIdOrThrow(idWishList,pageable);
+        Page<AddArticleOutputDto> listArticle= wishlistItemEntityList.map((wishlistItem)-> new AddArticleOutputDto(wishlistItem.getArticle().getIdArticle(),wishlistItem.getArticle().getName(),wishlistItem.getArticle().getDescription(),wishlistItem.getArticle().getPrice(),wishlistItem.getArticle().getBrand().getLibelle(),wishlistItem.getArticle().getTypeArticle().getLibelle(),wishlistItem.getArticle().getCreationDate(),wishlistItem.getWishlist().getVersion()));
         long durationMs = Tools.getDurationMs(start);
-        log.info("Le nombre d'article dans la liste d'envie {} est de {},durationMs={}",idWishList,listArticle.size(),durationMs);
+        log.info("Le nombre d'article dans la liste d'envie {} est de {},page : {},durationMs={}",idWishList,listArticle.getNumberOfElements(),listArticle.getNumber(),durationMs);
         return listArticle;
     }
 
@@ -162,8 +166,8 @@ public class WishlistService {
         });
     }
 
-    public List<WishlistItemEntity> findWishlistItemsByWishlistIdOrThrow(Long wishlistId){
-      return wishlistItemRepository.findByWishlist_idWishlist(wishlistId).orElseThrow(()->{
+    public Page<WishlistItemEntity> findWishlistItemsByWishlistIdOrThrow(Long wishlistId, Pageable pageable){
+      return wishlistItemRepository.findByWishlist_idWishlist(wishlistId,pageable).orElseThrow(()->{
             WishlistNotFoundException exception = new WishlistNotFoundException(Math.toIntExact(wishlistId));
             log.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,wishlistId,exception);
             return exception;

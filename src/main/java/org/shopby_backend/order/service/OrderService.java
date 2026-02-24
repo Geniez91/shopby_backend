@@ -21,6 +21,8 @@ import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.service.UsersService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -108,17 +110,13 @@ public class OrderService {
         return result;
     }
 
-    public List<OrderOutputDto> getOrdersByUserId(OrderGetByUserIdDto orderGetByUserIdDto) {
+    public Page<OrderOutputDto> getOrdersByUserId(OrderGetByUserIdDto orderGetByUserIdDto,Pageable pageable) {
         long start = System.nanoTime();
+        Page<OrderEntity> orderPage = this.findOrdersByUserId(orderGetByUserIdDto.userId(),pageable);
+        Page<OrderOutputDto> result=  orderPage.map(order -> orderTools.getOrderOutputDto(order, order.getOrderItems()));
 
-        List<OrderEntity> listOrderEntity = this.findOrdersByUserId(orderGetByUserIdDto.userId());
-
-        List<OrderOutputDto> result=  listOrderEntity.stream().map(order -> {
-            List<OrderItemEntity> items = this.findOrderItemByOrderIdOrThrow(order.getIdOrder());
-            return orderTools.getOrderOutputDto(order, items);
-        }).toList();
         long durationMs = Tools.getDurationMs(start);
-        log.info("Les commandes ont été bien affiché : userId={}, orderCount={}, durationMs={}", orderGetByUserIdDto.userId(), result.size(), durationMs);
+        log.info("Les commandes ont été bien affiché : userId={}, orderCount={},page={}, durationMs={}", orderGetByUserIdDto.userId(), result.getNumberOfElements(),result.getNumber(), durationMs);
         return result;
     }
 
@@ -130,13 +128,8 @@ public class OrderService {
         });
     }
 
-    public List<OrderEntity>findOrdersByUserId(Long userId) {
-      return orderRepository.findByUser_Id(userId).orElseThrow(()->
-        {
-            OrderNotFoundException exception = OrderNotFoundException.byUserId(userId);
-            log.warn(LogMessages.ORDER_NOT_FOUND_BY_USER_ID,userId,exception);
-            return exception;
-        });
+    public Page<OrderEntity>findOrdersByUserId(Long userId, Pageable pageable) {
+      return orderRepository.findByUser_Id(userId,pageable);
     }
 
     public List<OrderEntity>findOrdersByDateOrderAndStatus(LocalDate local,OrderStatus status){
