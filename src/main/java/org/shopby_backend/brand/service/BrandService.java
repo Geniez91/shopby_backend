@@ -2,16 +2,19 @@ package org.shopby_backend.brand.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.shopby_backend.brand.dto.BrandFilter;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.mapper.BrandMapper;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
+import org.shopby_backend.brand.specification.BrandSpecification;
 import org.shopby_backend.exception.brand.*;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,9 +64,10 @@ public class BrandService {
         return brandMapper.toDto(updatedBrand);
     }
 
-    public Page<BrandOutputDto> findAllBrands(Pageable pageable) {
+    public Page<BrandOutputDto> findAllBrands(BrandFilter filter, Pageable pageable) {
         long start = System.nanoTime();
-        Page<BrandEntity> page= brandRepository.findAll(pageable);
+        Specification<BrandEntity> spec = BrandSpecification.withFilters(filter);
+        Page<BrandEntity> page= brandRepository.findAll(spec,pageable);
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe plus de {} marques dans la base de données (page : {}), durationMs {}",page.getNumberOfElements(),page.getNumber(),durationMs);
         return page.map(brandMapper::toDto);

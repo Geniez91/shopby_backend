@@ -2,6 +2,7 @@ package org.shopby_backend.article.mapper;
 
 import org.shopby_backend.article.dto.AddArticleInputDto;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
+import org.shopby_backend.article.dto.AddArticleWithRatingDto;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
@@ -28,7 +29,9 @@ public class ArticleMapper {
                 articleEntity.getTypeArticle().getLibelle(),
                 articleEntity.getBrand().getLibelle(),
                 articleEntity.getCreationDate(),
-                articleEntity.getVersion()
+                articleEntity.getVersion(),
+                articleEntity.getAverageRating(),
+                articleEntity.getRatingCount()
         );
     };
 }

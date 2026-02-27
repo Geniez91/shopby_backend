@@ -12,8 +12,10 @@ import org.shopby_backend.users.model.TypeRoleEnum;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.model.ValidationEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
+import org.shopby_backend.users.specification.UsersSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -119,9 +121,10 @@ public class UsersService implements UserDetailsService {
         }
     }
 
-    public Page<UsersDto> findAllUsers(Pageable pageable){
+    public Page<UsersDto> findAllUsers(UserFilter filter, Pageable pageable){
         long start = System.nanoTime();
-        Page<UsersEntity> page = this.usersRepository.findAll(pageable);
+        Specification<UsersEntity> usersEntitySpecification = UsersSpecification.withFilters(filter);
+        Page<UsersEntity> page = this.usersRepository.findAll(usersEntitySpecification, pageable);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre d'utilisateur dans la base de données est de {}, page : {}, durationMs = {}",page.getNumberOfElements(),page.getNumber(),durationMs);
         return page.map(usersMapper::toDto);

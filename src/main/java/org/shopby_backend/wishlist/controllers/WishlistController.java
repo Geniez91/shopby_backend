@@ -44,8 +44,8 @@ public class WishlistController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<WishlistOutputDto> getWishlists(@Valid @RequestBody WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
-        return wishlistService.getAllWishListByUserId(wishListGetAllByIdDto,pageable);
+    public Page<WishlistOutputDto> getWishlists(WishlistFilter filter, @Valid @RequestBody WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
+        return wishlistService.getAllWishListByUserId(filter,wishListGetAllByIdDto,pageable);
     }
 
     @PostMapping("/{wishlistId}")

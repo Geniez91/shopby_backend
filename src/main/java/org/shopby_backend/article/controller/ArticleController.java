@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.shopby_backend.article.dto.AddArticleInputDto;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
+import org.shopby_backend.article.dto.AddArticleWithRatingDto;
+import org.shopby_backend.article.dto.ArticleFilter;
 import org.shopby_backend.article.service.ArticleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,8 +47,8 @@ public void deleteArticle(@PathVariable Long id){
 
 @GetMapping
 @ResponseStatus(HttpStatus.OK)
-public Page<AddArticleOutputDto> getAllArticles(Pageable pageable){
-    return articleService.getAllArticles(pageable);
+public Page<AddArticleOutputDto> getAllArticles(ArticleFilter filter, Pageable pageable){
+    return articleService.getFilteredArticles(filter,pageable);
 }
 
 @GetMapping("/{id}")

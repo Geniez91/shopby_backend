@@ -21,7 +21,7 @@ public class CommentEntity {
     private Long idComment;
 
     @ManyToOne
-    @JoinColumn(name = "article_id_article")
+    @JoinColumn(name = "id_article")
     private ArticleEntity article;
 
     @ManyToOne

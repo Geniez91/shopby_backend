@@ -6,15 +6,18 @@ import org.shopby_backend.exception.status.StatusGetException;
 import org.shopby_backend.exception.status.StatusNotFoundException;
 import org.shopby_backend.exception.status.StatusUpdateException;
 import org.shopby_backend.order.model.OrderStatus;
+import org.shopby_backend.status.dto.StatusFilter;
 import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
 import org.shopby_backend.status.mapper.StatusMapper;
 import org.shopby_backend.status.model.StatusEntity;
 import org.shopby_backend.status.persistence.StatusRepository;
+import org.shopby_backend.status.specification.StatusSpecification;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,9 +77,10 @@ public class StatusService {
         return statusMapper.toDto(status);
     }
 
-    public Page<StatusOutputDto> getAllStatus(Pageable pageable) {
+    public Page<StatusOutputDto> getAllStatus(StatusFilter statusFilter, Pageable pageable) {
       long start = System.nanoTime();
-      Page<StatusEntity> page= statusRepository.findAll(pageable);
+      Specification<StatusEntity> filter = StatusSpecification.witFilters(statusFilter);
+      Page<StatusEntity> page= statusRepository.findAll(filter, pageable);
       long durationMs = Tools.getDurationMs(start);
       log.info("Il ya plus de {} status dans la base de données,page : {}, durationMs = {}", page.getNumberOfElements(),page.getNumber(), durationMs);
       return page.map(statusMapper::toDto);

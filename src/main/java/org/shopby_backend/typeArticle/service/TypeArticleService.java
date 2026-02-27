@@ -6,12 +6,15 @@ import org.shopby_backend.exception.typeArticle.*;
 import org.shopby_backend.tools.LogMessages;
 import org.shopby_backend.tools.Tools;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
+import org.shopby_backend.typeArticle.dto.TypeArticleFilter;
 import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
 import org.shopby_backend.typeArticle.mapper.TypeArticleMapper;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
+import org.shopby_backend.typeArticle.specification.TypeArticleSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,9 +74,10 @@ public class TypeArticleService {
         log.info("Le type d'article {} a bien été supprimé, durationMs : {}",typeArticleEntity.getLibelle(),durationMs);
     }
 
-    public Page<TypeArticleOutputDto> getAllTypeArticle(Pageable pageable) {
+    public Page<TypeArticleOutputDto> getAllTypeArticle(TypeArticleFilter typeArticleFilter, Pageable pageable) {
         long start = System.nanoTime();
-        Page<TypeArticleEntity> page = typeArticleRepository.findAll(pageable);
+        Specification<TypeArticleEntity> filter= TypeArticleSpecification.witFilters(typeArticleFilter);
+        Page<TypeArticleEntity> page = typeArticleRepository.findAll(filter, pageable);
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe plus de {} type d'article dans la base de données,page : {} durationsMs : {}",page.getNumberOfElements(),page.getNumber(),durationMs);
         return page.map(entity ->

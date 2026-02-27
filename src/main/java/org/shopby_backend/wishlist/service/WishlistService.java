@@ -23,10 +23,12 @@ import org.shopby_backend.wishlist.model.WishlistEntity;
 import org.shopby_backend.wishlist.model.WishlistItemEntity;
 import org.shopby_backend.wishlist.persistence.WishlistItemRepository;
 import org.shopby_backend.wishlist.persistence.WishlistRepository;
+import org.shopby_backend.wishlist.specification.WishlistSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,10 +95,11 @@ public class WishlistService {
        return wishlistMapper.toOutputDto(wishlistEntity);
     }
 
-    public Page<WishlistOutputDto>getAllWishListByUserId(WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
+    public Page<WishlistOutputDto>getAllWishListByUserId(WishlistFilter filter, WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
         long start = System.nanoTime();
+        Specification<WishlistEntity> wishlistEntitySpecification = WishlistSpecification.withFilters(filter);
         UsersEntity user=this.usersService.findUsersOrThrow(wishListGetAllByIdDto.userId());
-        Page<WishlistEntity> page = wishlistRepository.findByUserId(user.getId(),pageable);
+        Page<WishlistEntity> page = wishlistRepository.findByUserId(wishlistEntitySpecification,user.getId(),pageable);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre de list d'envie est de {}, page : {} pour l'utilisateur {},durationMs={}",page.getNumberOfElements(),page.getNumber(),wishListGetAllByIdDto.userId(),durationMs);
         return page.map(wishlistMapper::toOutputDto);

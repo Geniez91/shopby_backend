@@ -48,4 +48,10 @@ public class ArticleEntity {
 
     @Version
     private Long version;
+
+    @Column(name = "average_rating")
+    private Double averageRating;
+
+    @Column(name = "rating_count")
+    private Long ratingCount;
 }

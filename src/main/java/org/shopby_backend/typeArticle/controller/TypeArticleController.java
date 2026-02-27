@@ -3,6 +3,7 @@ package org.shopby_backend.typeArticle.controller;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
+import org.shopby_backend.typeArticle.dto.TypeArticleFilter;
 import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
 import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.springframework.data.domain.Page;
@@ -42,8 +43,8 @@ public class TypeArticleController {
 
     @PreAuthorize("hasAnyAuthority('TYPE_ARTICLE_READ_ALL')")
     @GetMapping
-    public Page<TypeArticleOutputDto> getAllTypeArticle(Pageable pageable) {
-        return typeArticleService.getAllTypeArticle(pageable);
+    public Page<TypeArticleOutputDto> getAllTypeArticle(TypeArticleFilter filter, Pageable pageable) {
+        return typeArticleService.getAllTypeArticle(filter, pageable);
     }
 
     @PreAuthorize("hasAnyAuthority('TYPE_ARTICLE_READ')")

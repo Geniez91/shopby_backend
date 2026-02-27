@@ -2,6 +2,7 @@ package org.shopby_backend.status.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.shopby_backend.status.dto.StatusFilter;
 import org.shopby_backend.status.dto.StatusInputDto;
 import org.shopby_backend.status.dto.StatusOutputDto;
 import org.shopby_backend.status.service.StatusService;
@@ -44,7 +45,7 @@ public class StatusController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<StatusOutputDto> getAllStatus(Pageable pageable) {
-        return statusService.getAllStatus(pageable);
+    public Page<StatusOutputDto> getAllStatus(StatusFilter filter, Pageable pageable) {
+        return statusService.getAllStatus(filter,pageable);
     }
 }

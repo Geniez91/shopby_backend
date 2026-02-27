@@ -2,6 +2,7 @@ package org.shopby_backend.brand.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.shopby_backend.brand.dto.BrandFilter;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
 import org.shopby_backend.brand.service.BrandService;
@@ -36,8 +37,8 @@ public class BrandController {
     @PreAuthorize("hasAnyAuthority('BRAND_READ_ALL')")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<BrandOutputDto> getAllBrands(Pageable pageable){
-        return brandService.findAllBrands(pageable);
+    public Page<BrandOutputDto> getAllBrands(BrandFilter brandFilter, Pageable pageable){
+        return brandService.findAllBrands(brandFilter, pageable);
     }
 
     @PreAuthorize("hasAnyAuthority('BRAND_READ')")

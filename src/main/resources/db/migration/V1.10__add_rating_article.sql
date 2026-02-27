@@ -1,0 +1,2 @@
+ALTER TABLE article ADD COLUMN average_rating DOUBLE DEFAULT 0;
+ALTER TABLE article ADD COLUMN rating_count BIGINT DEFAULT 0;

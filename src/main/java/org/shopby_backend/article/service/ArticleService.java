@@ -1,6 +1,11 @@
 package org.shopby_backend.article.service;
+import org.shopby_backend.article.dto.AddArticleWithRatingDto;
+import org.shopby_backend.article.dto.ArticleFilter;
+import org.shopby_backend.article.specification.ArticleSpecification;
+import org.shopby_backend.comment.persistence.CommentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +24,9 @@ import org.shopby_backend.typeArticle.service.TypeArticleService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -29,6 +36,7 @@ public class ArticleService {
     private final ArticleMapper articleMapper;
     private final BrandService brandService;
     private final TypeArticleService typeArticleService;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public AddArticleOutputDto addNewArticle(AddArticleInputDto addArticleInputDto){
@@ -102,9 +110,10 @@ public class ArticleService {
         log.info("L'article {} a bien été supprimé, durationMs = {}",articleEntity.getIdArticle(),durationMs);
     }
 
-    public Page<AddArticleOutputDto> getAllArticles(Pageable pageable){
+    public Page<AddArticleOutputDto> getFilteredArticles(ArticleFilter filter, Pageable pageable){
         long start = System.nanoTime();
-        Page<ArticleEntity> page = articleRepository.findAll(pageable);
+        Specification<ArticleEntity> spec = ArticleSpecification.withFilters(filter);
+        Page<ArticleEntity> page = articleRepository.findAll(spec,pageable);
         long durationMs = Tools.getDurationMs(start);
         log.info("{} articles ont été trouvés (page {}, durationMs = {}",page.getSize(),page.getNumber(),durationMs);
         return page.map(articleMapper::toDto);

@@ -56,6 +56,13 @@ public class CommentService {
         CommentEntity commentEntity = commentMapper.toEntity(commentInputDto, user, article);
 
         CommentEntity savedComment = commentRepository.save(commentEntity);
+        double currentAverage=article.getAverageRating();
+        long currentCount=article.getRatingCount();
+        double newAverage =
+                ((currentAverage * currentCount) + commentInputDto.note())
+                        / (currentCount + 1);
+        article.setAverageRating(newAverage);
+        article.setRatingCount(currentCount + 1);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le commentaire a bien été créer avec l'id {}, durationMs={}", savedComment.getIdComment(), durationMs);
         return commentMapper.toDto(savedComment);
@@ -86,6 +93,14 @@ public class CommentService {
         CommentEntity commentEntity = this.findCommentOrThrow(idComment);
 
         commentRepository.delete(commentEntity);
+        ArticleEntity article = articleService.findArticleOrThrow(commentEntity.getArticle().getIdArticle());
+        double currentAverage=article.getAverageRating();
+        long currentCount=article.getRatingCount();
+        double newAverage =
+                ((currentAverage * currentCount) - commentEntity.getNote())
+                        / (currentCount - 1);
+        article.setAverageRating(newAverage);
+        article.setRatingCount(currentCount - 1);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le commentaire a bien été supprimé avec l'id {}, durationMs={}", idComment, durationMs);
     }

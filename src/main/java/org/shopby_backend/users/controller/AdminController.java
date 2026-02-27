@@ -2,6 +2,7 @@ package org.shopby_backend.users.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.shopby_backend.users.dto.UserFilter;
 import org.shopby_backend.users.dto.UserUpdateRoleDto;
 import org.shopby_backend.users.dto.UsersDto;
 import org.shopby_backend.users.dto.UsersOutput;
@@ -25,8 +26,8 @@ public class AdminController {
     @PreAuthorize("hasAnyAuthority('USER_READ_ALL')")
     @GetMapping
 
-    public Page<UsersDto> findAllUsers(Pageable pageable){
-        return this.usersService.findAllUsers(pageable);
+    public Page<UsersDto> findAllUsers(UserFilter filter, Pageable pageable){
+        return this.usersService.findAllUsers(filter, pageable);
     }
 
     @PreAuthorize("hasAnyAuthority('USER_UPDATE_ROLE')")
