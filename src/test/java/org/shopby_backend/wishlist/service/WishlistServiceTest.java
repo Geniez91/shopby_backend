@@ -1,14 +1,14 @@
 package org.shopby_backend.wishlist.service;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
+import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
-import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.article.service.ArticleService;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.exception.article.ArticleNotFoundException;
@@ -16,12 +16,19 @@ import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.exception.wishlist.*;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.users.model.UsersEntity;
-import org.shopby_backend.users.persistence.UsersRepository;
+import org.shopby_backend.users.service.UsersService;
 import org.shopby_backend.wishlist.dto.*;
+import org.shopby_backend.wishlist.mapper.WishlistItemMapper;
+import org.shopby_backend.wishlist.mapper.WishlistMapper;
 import org.shopby_backend.wishlist.model.WishlistEntity;
 import org.shopby_backend.wishlist.model.WishlistItemEntity;
 import org.shopby_backend.wishlist.persistence.WishlistItemRepository;
 import org.shopby_backend.wishlist.persistence.WishlistRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,7 +41,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class WishlistServiceTest {
     @Mock
-    ArticleRepository articleRepository;
+    ArticleService articleService;
 
     @Mock
     WishlistRepository wishlistRepository;
@@ -43,10 +50,19 @@ class WishlistServiceTest {
     WishlistItemRepository wishlistItemRepository;
 
     @Mock
-    UsersRepository usersRepository;
+    UsersService usersService;
 
-    @InjectMocks
     WishlistService wishlistService;
+
+    WishlistMapper wishlistMapper=new WishlistMapper();
+    WishlistItemMapper wishlistItemMapper=new WishlistItemMapper();
+    ArticleMapper articleMapper=new ArticleMapper();
+
+    @BeforeEach
+    void setUp() {
+        wishlistService=new WishlistService(wishlistRepository,wishlistItemRepository,wishlistMapper,wishlistItemMapper,usersService,articleService,articleMapper);
+    }
+
 
     @Test
     void shouldAddNewWishlist() {
@@ -58,7 +74,7 @@ class WishlistServiceTest {
                 .name(wishlistInputDto.name())
                 .description(wishlistInputDto.description())
                 .build();
-        when(usersRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(usersService.findUsersOrThrow(1L)).thenReturn(user);
         when(wishlistRepository.save(any(WishlistEntity.class))).thenReturn(wishlistEntity);
 
         WishlistOutputDto wishlistOutputDto = wishlistService.addWishList(wishlistInputDto);
@@ -67,19 +83,9 @@ class WishlistServiceTest {
     }
 
     @Test
-    void shouldThrowAnExceptionAddNewWishlistWhenUserIdIsEmpty() {
-        WishlistInputDto wishlistInputDto=new WishlistInputDto(null,"liste d'envie","description");
-
-        UsersNotFoundException usersNotFoundException=assertThrows(UsersNotFoundException.class,()->{
-            wishlistService.addWishList(wishlistInputDto);
-        });
-
-        Assertions.assertEquals("L'utilisateur n'existe pas avec l'id user :null",usersNotFoundException.getMessage());
-    }
-    @Test
     void shouldThrowAnExceptionAddNewWishlistWhenUserNotFound() {
         WishlistInputDto wishlistInputDto=new WishlistInputDto(1L,"liste d'envie","description");
-        when(usersRepository.findById(1L)).thenReturn(Optional.empty());
+        when(usersService.findUsersOrThrow(1L)).thenThrow(new UsersNotFoundException("L'utilisateur n'existe pas avec l'id user :1"));
 
         UsersNotFoundException usersNotFoundException=assertThrows(UsersNotFoundException.class,()->{
             wishlistService.addWishList(wishlistInputDto);
@@ -195,35 +201,29 @@ class WishlistServiceTest {
                 .description("description")
                 .build();
         List<WishlistEntity> wishlistEntityList= List.of(wishlistEntity,wishlistEntity2);
-        when(usersRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(wishlistRepository.findByUserId(user.getId())).thenReturn(wishlistEntityList);
+        Page<WishlistEntity> page=new PageImpl<>(wishlistEntityList);
+        WishlistFilter filter = new WishlistFilter("name",null);
+        Pageable pageable=PageRequest.of(0, 10);
+        when(usersService.findUsersOrThrow(1L)).thenReturn(user);
+        when(wishlistRepository.findByUserId(any(Specification.class),eq(user.getId()),any(Pageable.class))).thenReturn(page);
 
-        List<WishlistOutputDto> wishlistOutputDtos = wishlistService.getAllWishListByUserId(wishListGetAllByIdDto);
+        Page<WishlistOutputDto> wishlistOutputDtos = wishlistService.getAllWishListByUserId(filter,wishListGetAllByIdDto,pageable);
 
-        Assertions.assertEquals("name",wishlistOutputDtos.get(0).name());
-        Assertions.assertEquals("description",wishlistOutputDtos.get(0).description());
-        Assertions.assertEquals("name",wishlistOutputDtos.get(1).name());
-        Assertions.assertEquals("description",wishlistOutputDtos.get(1).description());
-    }
-
-    @Test
-    void shouldThrownAnExceptionGetAllWishlistWhenNoUserId(){
-        WishListGetAllByIdDto wishListGetAllByIdDto = new WishListGetAllByIdDto(null);
-
-        UsersNotFoundException usersNotFoundException=assertThrows(UsersNotFoundException.class,()->{
-            wishlistService.getAllWishListByUserId(wishListGetAllByIdDto);
-        });
-
-        Assertions.assertEquals("L'utilisateur n'existe pas avec l'id user :null", usersNotFoundException.getMessage());
+        Assertions.assertEquals("name",wishlistOutputDtos.getContent().get(0).name());
+        Assertions.assertEquals("description",wishlistOutputDtos.getContent().get(0).description());
+        Assertions.assertEquals("name",wishlistOutputDtos.getContent().get(1).name());
+        Assertions.assertEquals("description",wishlistOutputDtos.getContent().get(1).description());
     }
 
     @Test
     void shouldThrownAnExceptionGetAllWishlistWhenNoUserFound(){
         WishListGetAllByIdDto wishListGetAllByIdDto = new WishListGetAllByIdDto(1L);
-        when(usersRepository.findById(1L)).thenReturn(Optional.empty());
+        WishlistFilter filter = new WishlistFilter("name",null);
+        Pageable pageable=PageRequest.of(0, 10);
+        when(usersService.findUsersOrThrow(1L)).thenThrow(new UsersNotFoundException("L'utilisateur n'existe pas avec l'id user :1"));
 
         UsersNotFoundException usersNotFoundException=assertThrows(UsersNotFoundException.class,()->{
-            wishlistService.getAllWishListByUserId(wishListGetAllByIdDto);
+            wishlistService.getAllWishListByUserId(filter,wishListGetAllByIdDto,pageable);
         });
 
         Assertions.assertEquals("L'utilisateur n'existe pas avec l'id user :1", usersNotFoundException.getMessage());
@@ -247,7 +247,7 @@ class WishlistServiceTest {
                 .wishlist(wishlistEntity)
                 .build();
         when(wishlistRepository.findById(1)).thenReturn(Optional.of(wishlistEntity));
-        when(articleRepository.findById(wishlistAddItemInputDto.idArticle())).thenReturn(Optional.of(articleEntity));
+        when(articleService.findArticleOrThrow(wishlistAddItemInputDto.idArticle())).thenReturn(articleEntity);
         when(wishlistItemRepository.existsByWishlist_IdWishlistAndArticle_IdArticle(wishlistEntity.getIdWishlist(),articleEntity.getIdArticle())).thenReturn(false);
         when(wishlistItemRepository.save(any(WishlistItemEntity.class))).thenReturn(wishlistItem);
 
@@ -301,6 +301,7 @@ class WishlistServiceTest {
         WishlistAddItemInputDto wishlistAddItemInputDto= new WishlistAddItemInputDto(1L);
 
         when(wishlistRepository.findById(1)).thenReturn(Optional.of(wishlistEntity));
+        when(articleService.findArticleOrThrow(wishlistAddItemInputDto.idArticle())).thenThrow(new ArticleNotFoundException(1L));
 
         ArticleNotFoundException articleNotFoundException=assertThrows(ArticleNotFoundException.class,()->{
             wishlistService.addWishListItem(1L,wishlistAddItemInputDto);
@@ -322,7 +323,7 @@ class WishlistServiceTest {
                 .description("description")
                 .build();
         when(wishlistRepository.findById(1)).thenReturn(Optional.of(wishlistEntity));
-        when(articleRepository.findById(wishlistAddItemInputDto.idArticle())).thenReturn(Optional.of(articleEntity));
+        when(articleService.findArticleOrThrow(wishlistAddItemInputDto.idArticle())).thenReturn(articleEntity);
         when(wishlistItemRepository.existsByWishlist_IdWishlistAndArticle_IdArticle(wishlistEntity.getIdWishlist(),articleEntity.getIdArticle())).thenReturn(true);
 
         WishlistItemAlreadyExistsException wishlistItemAlreadyExistsException=assertThrows(WishlistItemAlreadyExistsException.class,()->{
@@ -351,7 +352,7 @@ class WishlistServiceTest {
                 .wishlist(wishlistEntity)
                 .build();
         when(wishlistRepository.findById(1)).thenReturn(Optional.of(wishlistEntity));
-        when(articleRepository.findById(wishlistAddItemInputDto.idArticle())).thenReturn(Optional.of(articleEntity));
+        when(articleService.findArticleOrThrow(wishlistAddItemInputDto.idArticle())).thenReturn(articleEntity);
         when(wishlistItemRepository.findByWishlist_idWishlistAndArticle_idArticle(1L,wishlistAddItemInputDto.idArticle())).thenReturn(Optional.ofNullable(wishlistItem));
 
        wishlistService.deleteWishlistItem(1L,wishlistAddItemInputDto);
@@ -373,11 +374,11 @@ class WishlistServiceTest {
                 .build();
         when(wishlistRepository.findById(1)).thenReturn(Optional.of(wishlistEntity));
 
-        ArticleNotFoundException articleNotFoundException = assertThrows(ArticleNotFoundException.class,()->{
+        WishlistRemoveItemException wishlistRemoveItemException = assertThrows(WishlistRemoveItemException.class,()->{
             wishlistService.deleteWishlistItem(1L,wishlistAddItemInputDto);
         });
 
-        Assertions.assertEquals("Aucun article ne correspond à l'id de l'article null",articleNotFoundException.getMessage());
+        Assertions.assertEquals("L'id de liste d'envie et de l'article ne correpond a aucun article d'une liste d'envie avec idWishlist :1 et idArticle : null",wishlistRemoveItemException.getMessage());
     }
 
     @Test
@@ -403,6 +404,7 @@ class WishlistServiceTest {
                 .description("description")
                 .build();
         when(wishlistRepository.findById(1)).thenReturn(Optional.of(wishlistEntity));
+        when(articleService.findArticleOrThrow(wishlistAddItemInputDto.idArticle())).thenThrow(new ArticleNotFoundException(1L));
 
         ArticleNotFoundException articleNotFoundException=assertThrows(ArticleNotFoundException.class,()->{
             wishlistService.deleteWishlistItem(1L,wishlistAddItemInputDto);
@@ -418,6 +420,7 @@ class WishlistServiceTest {
         TypeArticleEntity typeArticleEntity=TypeArticleEntity.builder().idTypeArticle(1L).libelle("Comics").build();
         ArticleEntity articleEntity=ArticleEntity.builder().idArticle(1L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name").build();
         ArticleEntity articleEntity2=ArticleEntity.builder().idArticle(1L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name2").build();
+        Pageable pageable=PageRequest.of(0, 10);
 
         WishlistEntity wishlistEntity=WishlistEntity.builder()
                 .idWishlist(1L)
@@ -436,20 +439,23 @@ class WishlistServiceTest {
                 .wishlist(wishlistEntity)
                 .build();
         List<WishlistItemEntity> wishlistEntityList= List.of(wishlistItem,wishlistItem2);
-        when(wishlistItemRepository.findByWishlist_idWishlist(1L)).thenReturn(Optional.of(wishlistEntityList));
+        Page<WishlistItemEntity> page= new PageImpl<WishlistItemEntity>(wishlistEntityList);
 
-        List<AddArticleOutputDto> listAddArticleOutputDto = wishlistService.getAllArticleByWishlistId(1L);
+        when(wishlistItemRepository.findByWishlist_idWishlist(1L,pageable)).thenReturn(Optional.of(page));
 
-        Assertions.assertEquals(2,listAddArticleOutputDto.size());
+        Page<AddArticleOutputDto> listAddArticleOutputDto = wishlistService.getAllArticleByWishlistId(1L,pageable);
+
+        Assertions.assertEquals(2,listAddArticleOutputDto.getContent().size());
     }
 
 
     @Test
     void shouldThrownGetAllArticlesByWishListWhenNoWishlistIdFound(){
-        when(wishlistItemRepository.findByWishlist_idWishlist(1L)).thenReturn(Optional.empty());
+        Pageable pageable=PageRequest.of(0, 10);
+        when(wishlistItemRepository.findByWishlist_idWishlist(1L,any(Pageable.class))).thenReturn(Optional.empty());
 
         WishlistNotFoundException wishlistNotFoundException =  assertThrows(WishlistNotFoundException.class,()->{
-            wishlistService.getAllArticleByWishlistId(1L);
+            wishlistService.getAllArticleByWishlistId(1L,pageable);
         });
 
         Assertions.assertEquals("L'id de la liste d'envie ne correspond a aucun liste avec l'id 1",wishlistNotFoundException.getMessage());

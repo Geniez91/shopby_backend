@@ -1,6 +1,7 @@
 package org.shopby_backend.article.service;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,16 +9,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.shopby_backend.article.dto.AddArticleInputDto;
 import org.shopby_backend.article.dto.AddArticleOutputDto;
+import org.shopby_backend.article.dto.ArticleFilter;
+import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
+import org.shopby_backend.brand.dto.BrandFilter;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.brand.service.BrandService;
+import org.shopby_backend.comment.persistence.CommentRepository;
 import org.shopby_backend.exception.article.*;
 import org.shopby_backend.exception.brand.BrandNotFoundException;
 import org.shopby_backend.exception.typeArticle.TypeArticleNotFoundException;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
+import org.shopby_backend.typeArticle.service.TypeArticleService;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -35,13 +43,22 @@ class ArticleServiceTest {
     ArticleRepository articleRepository;
 
     @Mock
-    BrandRepository brandRepository;
+    BrandService brandService;
 
     @Mock
-    TypeArticleRepository typeArticleRepository;
+    TypeArticleService typeArticleService;
 
-    @InjectMocks
+    @Mock
+    CommentRepository commentRepository;
+
     ArticleService articleService;
+
+    ArticleMapper articleMapper=new ArticleMapper();
+
+    @BeforeEach
+    void setUp() {
+        articleService=new ArticleService(articleRepository,articleMapper,brandService,typeArticleService,commentRepository);
+    }
 
     @Test
     void shouldAddArticle(){
@@ -49,8 +66,8 @@ class ArticleServiceTest {
         TypeArticleEntity typeArticleEntity=TypeArticleEntity.builder().idTypeArticle(1L).libelle("Comics").build();
         AddArticleInputDto addArticleInputDto=new AddArticleInputDto("name","description",BigDecimal.valueOf(2),1L,1L);
         ArticleEntity articleEntity=ArticleEntity.builder().idArticle(1L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name").build();
-        when(brandRepository.findById(addArticleInputDto.idBrand())).thenReturn(Optional.of(brandEntity));
-        when(typeArticleRepository.findById(addArticleInputDto.idType())).thenReturn(Optional.of(typeArticleEntity));
+        when(brandService.findBrandOrThrow(addArticleInputDto.idBrand())).thenReturn(brandEntity);
+        when(typeArticleService.findTypeArticleOrThrow(addArticleInputDto.idType())).thenReturn(typeArticleEntity);
         when(articleRepository.save(any(ArticleEntity.class))).thenReturn(articleEntity);
 
         AddArticleOutputDto addArticleOutputDto = articleService.addNewArticle(addArticleInputDto);
@@ -75,7 +92,7 @@ class ArticleServiceTest {
     @Test
     void shouldThrownAnExceptionAddWhenBrandEmpty(){
         AddArticleInputDto addArticleInputDto=new AddArticleInputDto("Superman","description",BigDecimal.valueOf(2),1L,1L);
-        when(brandRepository.findById(addArticleInputDto.idBrand())).thenReturn(Optional.empty());
+        when(brandService.findBrandOrThrow(addArticleInputDto.idBrand())).thenThrow(new BrandNotFoundException(1L));
 
         BrandNotFoundException brandNotFoundException=Assertions.assertThrows(BrandNotFoundException.class,()->{
             articleService.addNewArticle(addArticleInputDto);
@@ -87,8 +104,8 @@ class ArticleServiceTest {
     void shouldThrownAnExceptionAddWhenTypeEmpty(){
         BrandEntity brandEntity= BrandEntity.builder().idBrand(1L).libelle("DC").build();
         AddArticleInputDto addArticleInputDto=new AddArticleInputDto("Superman","description",BigDecimal.valueOf(2),1L,1L);
-        when(brandRepository.findById(addArticleInputDto.idBrand())).thenReturn(Optional.ofNullable(brandEntity));
-        when(typeArticleRepository.findById(addArticleInputDto.idType())).thenReturn(Optional.empty());
+        when(brandService.findBrandOrThrow(addArticleInputDto.idBrand())).thenReturn(brandEntity);
+        when(typeArticleService.findTypeArticleOrThrow(addArticleInputDto.idType())).thenThrow(new TypeArticleNotFoundException("Aucun type article n'existe avec l'id 1"));
 
         TypeArticleNotFoundException typeArticleNotFoundException=Assertions.assertThrows(TypeArticleNotFoundException.class,()->{
             articleService.addNewArticle(addArticleInputDto);
@@ -130,7 +147,7 @@ class ArticleServiceTest {
         AddArticleInputDto addArticleInputDto=new AddArticleInputDto("test",null,null,2L,null);
         ArticleEntity articleEntity=ArticleEntity.builder().idArticle(1L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name").build();
         when(articleRepository.findById(1L)).thenReturn(Optional.of(articleEntity));
-        when(brandRepository.findByIdBrand(addArticleInputDto.idBrand())).thenReturn(Optional.empty());
+        when(brandService.findBrandOrThrow(addArticleInputDto.idBrand())).thenThrow(new BrandNotFoundException(2L));
 
         BrandNotFoundException brandNotFoundException=Assertions.assertThrows(BrandNotFoundException.class,()->{
             articleService.updateArticle(1L,addArticleInputDto);
@@ -146,7 +163,7 @@ class ArticleServiceTest {
         AddArticleInputDto addArticleInputDto=new AddArticleInputDto("test",null,null,null,2L);
         ArticleEntity articleEntity=ArticleEntity.builder().idArticle(1L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name").build();
         when(articleRepository.findById(1L)).thenReturn(Optional.of(articleEntity));
-        when(typeArticleRepository.findById(addArticleInputDto.idType())).thenReturn(Optional.empty());
+        when(typeArticleService.findTypeArticleOrThrow(addArticleInputDto.idType())).thenThrow(new TypeArticleNotFoundException("Aucun type article n'existe avec l'id 2"));
 
         TypeArticleNotFoundException typeArticleNotFoundException=Assertions.assertThrows(TypeArticleNotFoundException.class,()->{
             articleService.updateArticle(1L,addArticleInputDto);
@@ -188,10 +205,13 @@ class ArticleServiceTest {
         ArticleEntity articleEntity=ArticleEntity.builder().idArticle(1L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name").build();
         ArticleEntity articleEntity2=ArticleEntity.builder().idArticle(2L).price(BigDecimal.valueOf(2)).typeArticle(typeArticleEntity).brand(brandEntity).description("desc").name("name").build();
         List<ArticleEntity> articleEntityList= List.of(articleEntity,articleEntity2);
-        when(articleRepository.findAll()).thenReturn(articleEntityList);
+        Page<ArticleEntity> page = new PageImpl<>(articleEntityList);
+        ArticleFilter articleFilter=new ArticleFilter(BigDecimal.valueOf(50),BigDecimal.valueOf(10),1L,1L,1L,"name");
+        Pageable pageable = PageRequest.of(0, 10);
+        when(articleRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(page);
 
-        List<AddArticleOutputDto> listArticleEntiy=articleService.getAllArticles();
-        Assertions.assertEquals(2,listArticleEntiy.size());
+        Page<AddArticleOutputDto> listArticleEntity=articleService.getFilteredArticles(articleFilter,pageable);
+        Assertions.assertEquals(2,listArticleEntity.getContent().size());
     }
 
     @Test

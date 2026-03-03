@@ -30,7 +30,7 @@ public class AdminController {
         return this.usersService.findAllUsers(filter, pageable);
     }
 
-    @PreAuthorize("hasAnyAuthority('USER_UPDATE_ROLE')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE')")
     @PutMapping
     public void updateUserRole(@RequestBody UserUpdateRoleDto userInputDto){
         this.usersService.updateUserRole(userInputDto);

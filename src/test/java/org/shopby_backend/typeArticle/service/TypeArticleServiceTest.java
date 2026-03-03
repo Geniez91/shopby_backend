@@ -1,6 +1,7 @@
 package org.shopby_backend.typeArticle.service;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,9 +12,13 @@ import org.shopby_backend.brand.service.BrandService;
 import org.shopby_backend.exception.brand.BrandCreateException;
 import org.shopby_backend.exception.typeArticle.*;
 import org.shopby_backend.typeArticle.dto.TypeArticleDto;
+import org.shopby_backend.typeArticle.dto.TypeArticleFilter;
 import org.shopby_backend.typeArticle.dto.TypeArticleOutputDto;
+import org.shopby_backend.typeArticle.mapper.TypeArticleMapper;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.shopby_backend.typeArticle.persistence.TypeArticleRepository;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +34,14 @@ class TypeArticleServiceTest {
     @Mock
     TypeArticleRepository typeArticleRepository;
 
-    @InjectMocks
     TypeArticleService typeArticleService;
+
+    TypeArticleMapper typeArticleMapper=new TypeArticleMapper();
+
+    @BeforeEach
+    void setUp() {
+        typeArticleService = new TypeArticleService(typeArticleRepository, typeArticleMapper);
+    }
 
     @Test
     void shouldAddTypeArticleWithoutParent(){
@@ -146,11 +157,14 @@ class TypeArticleServiceTest {
         List<TypeArticleEntity> typeArticleEntityList= new ArrayList<>();
         typeArticleEntityList.add(type1);
         typeArticleEntityList.add(type2);
-        when(typeArticleRepository.findAll()).thenReturn(typeArticleEntityList);
+        Pageable pageable= PageRequest.of(0, 10);
+        Page<TypeArticleEntity> page =new PageImpl<>(typeArticleEntityList);
+        TypeArticleFilter typeArticleFilter=new TypeArticleFilter("Comics");
+        when(typeArticleRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(page);
 
-        List<TypeArticleOutputDto> listTypeArticleOutputDto=typeArticleService.getAllTypeArticle();
+        Page<TypeArticleOutputDto> listTypeArticleOutputDto=typeArticleService.getAllTypeArticle(typeArticleFilter,pageable);
 
-        Assertions.assertEquals(2,listTypeArticleOutputDto.size());
+        Assertions.assertEquals(2,listTypeArticleOutputDto.getContent().size());
     }
 
     @Test

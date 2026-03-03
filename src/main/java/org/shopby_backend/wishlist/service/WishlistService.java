@@ -146,7 +146,7 @@ public class WishlistService {
     public Page<AddArticleOutputDto> getAllArticleByWishlistId(Long idWishList,Pageable pageable){
         long start = System.nanoTime();
         Page<WishlistItemEntity> wishlistItemEntityList=this.findWishlistItemsByWishlistIdOrThrow(idWishList,pageable);
-        Page<AddArticleOutputDto> listArticle= wishlistItemEntityList.map((wishlistItem)-> new AddArticleOutputDto(wishlistItem.getArticle().getIdArticle(),wishlistItem.getArticle().getName(),wishlistItem.getArticle().getDescription(),wishlistItem.getArticle().getPrice(),wishlistItem.getArticle().getBrand().getLibelle(),wishlistItem.getArticle().getTypeArticle().getLibelle(),wishlistItem.getArticle().getCreationDate(),wishlistItem.getWishlist().getVersion()));
+        Page<AddArticleOutputDto> listArticle= wishlistItemEntityList.map((wishlistItem)-> new AddArticleOutputDto(wishlistItem.getArticle().getIdArticle(),wishlistItem.getArticle().getName(),wishlistItem.getArticle().getDescription(),wishlistItem.getArticle().getPrice(),wishlistItem.getArticle().getBrand().getLibelle(),wishlistItem.getArticle().getTypeArticle().getLibelle(),wishlistItem.getArticle().getCreationDate(),wishlistItem.getWishlist().getVersion(),wishlistItem.getArticle().getAverageRating(),wishlistItem.getArticle().getRatingCount()));
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre d'article dans la liste d'envie {} est de {},page : {},durationMs={}",idWishList,listArticle.getNumberOfElements(),listArticle.getNumber(),durationMs);
         return listArticle;

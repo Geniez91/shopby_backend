@@ -1,17 +1,22 @@
 package org.shopby_backend.brand.service;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.shopby_backend.brand.dto.BrandFilter;
 import org.shopby_backend.brand.dto.BrandInputDto;
 import org.shopby_backend.brand.dto.BrandOutputDto;
+import org.shopby_backend.brand.mapper.BrandMapper;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.brand.persistence.BrandRepository;
 import org.shopby_backend.exception.brand.*;
 import org.shopby_backend.users.model.UsersEntity;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +27,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BrandServiceTest {
+
     @Mock
     BrandRepository brandRepository;
 
-    @InjectMocks
     BrandService brandService;
+
+    BrandMapper brandMapper = new BrandMapper();
+
+    @BeforeEach
+    void setUp() {
+        brandService = new BrandService(brandRepository, brandMapper);
+    }
 
     @Test
     void shoudlAddBrand(){
@@ -69,7 +81,7 @@ class BrandServiceTest {
                 .idBrand(1L)
                 .libelle(brandInputDto.libelle())
                 .build();
-        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.ofNullable(oldbrandEntity));
+        when(brandRepository.findById(1L)).thenReturn(Optional.ofNullable(oldbrandEntity));
         when(brandRepository.save(any(BrandEntity.class))).thenReturn(brandEntity);
 
         BrandOutputDto updateBrandOutputDto= brandService.updateBrand(1L,brandInputDto);
@@ -80,7 +92,7 @@ class BrandServiceTest {
     @Test
     void shouldThrowExceptionWhenBrandNotExist(){
         BrandInputDto brandInputDto =new BrandInputDto("DC");
-        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.empty());
+        when(brandRepository.findById(1L)).thenReturn(Optional.empty());
 
         BrandNotFoundException brandNotFoundException= Assertions.assertThrows(
                 BrandNotFoundException.class,
@@ -96,18 +108,21 @@ class BrandServiceTest {
         List<BrandEntity> listBrandEntity=new ArrayList<>();
         listBrandEntity.add(brandEntity);
         listBrandEntity.add(brandEntity2);
-        when(brandRepository.findAll()).thenReturn(listBrandEntity);
+        Page<BrandEntity> page = new PageImpl<>(listBrandEntity);
+        BrandFilter brandFilter=new BrandFilter("DC");
+        Pageable pageable = PageRequest.of(0, 10);
+        when(brandRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(page);
 
-        List<BrandOutputDto> listBrandOutputDto= brandService.findAllBrands();
+        Page<BrandOutputDto> listBrandOutputDto= brandService.findAllBrands(brandFilter,pageable);
 
-        Assertions.assertEquals(2, listBrandOutputDto.size());
-        Assertions.assertEquals("DC", listBrandOutputDto.get(0).libelle());
+        Assertions.assertEquals(2, listBrandOutputDto.getContent().size());
+        Assertions.assertEquals("DC", listBrandOutputDto.getContent().get(0).libelle());
     }
 
     @Test
     void shouldShowOnlyOneBrand(){
         BrandEntity brandEntity=BrandEntity.builder().idBrand(1L).libelle("DC").build();
-        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.ofNullable(brandEntity));
+        when(brandRepository.findById(1L)).thenReturn(Optional.ofNullable(brandEntity));
 
         BrandOutputDto brandOutputDto= brandService.findBrandById(1L);
 
@@ -116,7 +131,7 @@ class BrandServiceTest {
 
     @Test
     void shouldThrowExceptionWhenNoBrandGetById(){
-        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.empty());
+        when(brandRepository.findById(1L)).thenReturn(Optional.empty());
 
         BrandNotFoundException brandNotFoundException= Assertions.assertThrows(
                 BrandNotFoundException.class,
@@ -128,14 +143,14 @@ class BrandServiceTest {
     @Test
     void shouldDeleteBrand(){
         BrandEntity brandEntity=BrandEntity.builder().idBrand(1L).libelle("DC").build();
-        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.ofNullable(brandEntity));
+        when(brandRepository.findById(1L)).thenReturn(Optional.ofNullable(brandEntity));
 
         brandService.deleteBrand(1L);
     }
 
     @Test
     void shouldThrowExceptionWhenNoBrandDelete(){
-        when(brandRepository.findByIdBrand(1L)).thenReturn(Optional.empty());
+        when(brandRepository.findById(1L)).thenReturn(Optional.empty());
 
         BrandNotFoundException brandGetException= Assertions.assertThrows(
                 BrandNotFoundException.class,
@@ -143,7 +158,4 @@ class BrandServiceTest {
         );
         Assertions.assertEquals("Aucune marque ne correspond à l'id de la marque : 1",brandGetException.getMessage());
     }
-
-
-
 }

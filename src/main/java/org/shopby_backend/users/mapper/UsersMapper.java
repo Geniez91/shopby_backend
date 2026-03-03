@@ -26,8 +26,8 @@ public class UsersMapper {
     public UsersDto toDto(UsersEntity usersEntity) {
        return new UsersDto(
                usersEntity.getId(),
-               usersEntity.getNom(),
                usersEntity.getPrenom(),
+               usersEntity.getNom(),
                usersEntity.getPassword(),
                usersEntity.getEmail(),
                usersEntity.getCountry(),

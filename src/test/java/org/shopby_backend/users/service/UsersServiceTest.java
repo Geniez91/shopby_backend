@@ -1,29 +1,23 @@
 package org.shopby_backend.users.service;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.shopby_backend.exception.users.UsersAlreadyExistsException;
 import org.shopby_backend.exception.users.UsersCreateException;
 import org.shopby_backend.exception.users.UsersNotFoundException;
-import org.shopby_backend.exception.users.UsersUpdateException;
 import org.shopby_backend.users.dto.UserInfoUpdateDto;
 import org.shopby_backend.users.dto.UserInputDto;
-import org.shopby_backend.users.dto.UserOutputInfoUpdateDto;
 import org.shopby_backend.users.dto.UsersDto;
+import org.shopby_backend.users.mapper.UsersMapper;
 import org.shopby_backend.users.model.UsersEntity;
 import org.shopby_backend.users.persistence.UsersRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import java.util.Optional;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -38,13 +32,13 @@ class UsersServiceTest {
     @Mock
     BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    @InjectMocks
     UsersService usersService;
 
+    UsersMapper usersMapper=new UsersMapper();
 
     @BeforeEach
     void setUp() {
-        usersService = new UsersService(usersRepository, new BCryptPasswordEncoder(),validationService);
+        usersService = new UsersService(usersRepository, new BCryptPasswordEncoder(),validationService,usersMapper);
     }
 
     @Test
