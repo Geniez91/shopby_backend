@@ -2,6 +2,8 @@ package org.shopby_backend.users.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.shopby_backend.exception.users.UsersAlreadyExistsException;
+import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.jwt.service.JwtService;
 import org.shopby_backend.users.dto.UserInfoUpdateDto;
 import org.shopby_backend.users.dto.UserInputDto;
@@ -27,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.security.authentication.AuthenticationManager;
 
 @WebMvcTest(UsersController.class)
-@ContextConfiguration(classes = UsersController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class UsersControllerTest {
 
@@ -48,13 +49,25 @@ class UsersControllerTest {
         /// Arrange
         UserInputDto inputDto = new UserInputDto("Jeremy", "Weltmann", "test123", "jeremy@example.com","France");
         UsersDto user = new UsersDto(1L,inputDto.nom(),inputDto.prenom(),inputDto.email(),inputDto.password(), inputDto.country(),null,null,1L);
-        when(usersService.addUser(inputDto)).thenReturn(user);
+        when(usersService.addUser(any())).thenReturn(user);
 
         mockMvc.perform(post("/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(inputDto)))
                 .andExpect(status().isCreated());
 
+    }
+
+    @Test
+    void shouldThrownAnExceptionWhenUserIsAlreadyExists() throws Exception {
+        UserInputDto inputDto = new UserInputDto("Jeremy", "Weltmann", "test123", "jeremy@example.com","France");
+        when(usersService.addUser(any()))
+                .thenThrow(new UsersAlreadyExistsException(inputDto.email()));
+
+        mockMvc.perform(post("/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(inputDto)))
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -70,4 +83,21 @@ class UsersControllerTest {
                 .content(new ObjectMapper().writeValueAsString(userInfoUpdateDto)))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(authorities = "USER_UPDATE")
+    void shouldThrownUserNotFoundWhenUserUpdateInfo() throws Exception {
+        ///Arrange
+        UserInfoUpdateDto userInfoUpdateDto=new UserInfoUpdateDto("Jeremy","Weltmann","123","weltmannjeremy@gmail.com","France","10 rue des Tulipes","10 rue des Tulipes");
+        when(usersService.updateUserInfo(1L,userInfoUpdateDto)).thenThrow(UsersNotFoundException.byUserId(1L));
+
+        mockMvc.perform(patch("/user/{userId}",1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(userInfoUpdateDto)))
+                .andExpect(status().isNotFound());
+    }
+
+
+
+
 }

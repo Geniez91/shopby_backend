@@ -44,23 +44,23 @@ public class WishlistController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<WishlistOutputDto> getWishlists(WishlistFilter filter, @Valid @RequestBody WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
+    public Page<WishlistOutputDto> getWishlists(WishlistFilter filter, @RequestParam WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
         return wishlistService.getAllWishListByUserId(filter,wishListGetAllByIdDto,pageable);
     }
 
-    @PostMapping("/{wishlistId}")
+    @PostMapping("/{wishlistId}/items")
     @ResponseStatus(HttpStatus.CREATED)
     public WishlistAddItemOutputDto addNewListItem(@PathVariable Long wishlistId,@Valid @RequestBody WishlistAddItemInputDto wishlistAddItemInputDto){
         return wishlistService.addWishListItem(wishlistId,wishlistAddItemInputDto);
     }
 
-    @DeleteMapping("/{wishlistId}")
+    @DeleteMapping("/{wishlistId}/items")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteWishlistItem(@PathVariable Long wishlistId,@Valid @RequestBody WishlistAddItemInputDto wishlistAddItemInputDto){
          wishlistService.deleteWishlistItem(wishlistId,wishlistAddItemInputDto);
     }
 
-    @GetMapping("{wishlistId}")
+    @GetMapping("{wishlistId}/items")
     @ResponseStatus(HttpStatus.OK)
     public Page<AddArticleOutputDto> getAllArticlesByWishlistId(@PathVariable Long wishlistId, Pageable pageable){
         return wishlistService.getAllArticleByWishlistId(wishlistId,pageable);

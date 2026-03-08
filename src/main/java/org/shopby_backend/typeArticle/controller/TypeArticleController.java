@@ -28,7 +28,7 @@ public class TypeArticleController {
     }
 
     @PreAuthorize("hasAnyAuthority('TYPE_ARTICLE_UPDATE')")
-    @PatchMapping
+    @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TypeArticleOutputDto updateTypeArticle(@PathVariable Long id, @Valid @RequestBody TypeArticleDto typeArticleDto) {
         return typeArticleService.updateTypeArticle(id, typeArticleDto);
