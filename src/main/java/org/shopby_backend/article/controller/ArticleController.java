@@ -56,7 +56,13 @@ private final ArticleService articleService;
                 content = @Content(
                         schema = @Schema(implementation = ErrorResponse.class)
                 )),
-        @ApiResponse(responseCode = "409", description = "Conflit de données")
+        @ApiResponse(
+                responseCode = "409",
+                description = "Conflit de données",
+                content = @Content(
+                        schema = @Schema(implementation = ErrorResponse.class)
+                )
+        )
 })
 public AddArticleOutputDto addArticle(@Valid @RequestBody AddArticleInputDto addArticleInputDto){
     return articleService.addNewArticle(addArticleInputDto);
