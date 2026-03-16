@@ -38,6 +38,7 @@ Principes utilisées :
 - Stockage en local d'image pour les images des articles qui vont être enregistrés dans un dossier du serveur
 
 🏗️ Architecture
+
 Architecture modulaire organisée par fonctionnalité.
 
 Chaque module contient :
@@ -50,6 +51,7 @@ Chaque module contient :
 - entity
 
 🧱 Stack technique
+
 - Java 17
 - Spring Boot 3
 - Spring Data JPA
