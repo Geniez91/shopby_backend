@@ -1,5 +1,7 @@
 package org.shopby_backend.articlePhoto.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.shopby_backend.articlePhoto.dto.ArticlePhotoOutputDto;
 import org.shopby_backend.articlePhoto.service.ArticlePhotoService;
@@ -13,12 +15,15 @@ import java.util.List;
 
 @AllArgsConstructor
 @RestController
+@Tag(name = "Article Photo", description = "Gestion des photos d'un article")
 public class ArticlePhotoController {
     private ArticlePhotoService articlePhotoService;
 
+    @Operation(summary = "Upload d'une photo pour un article")
     @PreAuthorize("hasAnyAuthority('ARTICLE_PHOTO_UPLOAD')")
     @PostMapping(value = "/article/{idArticle}/photos",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
+
     public List<ArticlePhotoOutputDto> uploadPhotos(@PathVariable Long idArticle, @RequestPart("files") List<MultipartFile> files){
         return  articlePhotoService.uploadPhotos(idArticle,files);
     }
