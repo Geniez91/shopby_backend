@@ -1,4 +1,5 @@
 🛒 ShopBy Backend
+
 📌 Description
 ShopBy est un backend e-commerce développé avec Spring Boot.
 Il simule une plateforme de vente en ligne avec gestion complète des utilisateurs, articles et commandes.
