@@ -20,4 +20,8 @@ public class WishlistSpecification {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         });
     }
+    public static Specification<WishlistEntity> hasUserId(Long userId) {
+        return (root, query, cb) ->
+                cb.equal(root.get("user").get("id"), userId);
+    }
 }

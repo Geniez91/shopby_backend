@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @AllArgsConstructor
 @RestController
@@ -200,7 +201,7 @@ public class WishlistController {
                     )
             ),
     })
-    public Page<WishlistOutputDto> getWishlists(WishlistFilter filter, @RequestParam WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
+    public Page<WishlistOutputDto> getWishlists(WishlistFilter filter, WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
         return wishlistService.getAllWishListByUserId(filter,wishListGetAllByIdDto,pageable);
     }
 
@@ -309,5 +310,10 @@ public class WishlistController {
     })
     public Page<AddArticleOutputDto> getAllArticlesByWishlistId(@PathVariable Long wishlistId, Pageable pageable){
         return wishlistService.getAllArticleByWishlistId(wishlistId,pageable);
+    }
+
+    @PostMapping("/{wishlistId}/image")
+    public WishlistImageUploadDto uploadWishlistImage(@PathVariable Integer wishlistId, @RequestPart("file") MultipartFile file){
+        return wishlistService.uploadWishlistPhoto(wishlistId,file);
     }
 }

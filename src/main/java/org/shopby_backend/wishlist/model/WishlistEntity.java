@@ -33,4 +33,7 @@ public class WishlistEntity {
 
     @Version
     private Long version;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }

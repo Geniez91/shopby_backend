@@ -18,6 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -91,6 +92,16 @@ public class TypeArticleService {
         long durationMs = Tools.getDurationMs(start);
         log.info("Il existe bien un type d'article {},durationMs : {}",typeArticleEntity.getLibelle(),durationMs);
         return typeArticleMapper.toDto(typeArticleEntity,typeArticleEntity.getParent().getIdTypeArticle());
+    }
+
+    public List<String> buildBreadCrumb(TypeArticleEntity typeArticleEntity) {
+        List<String> breadcrumbDto = new ArrayList<>();
+
+        while (typeArticleEntity!=null){
+            breadcrumbDto.add(0, typeArticleEntity.getLibelle());
+            typeArticleEntity=typeArticleEntity.getParent();
+        }
+        return breadcrumbDto;
     }
 
     public TypeArticleEntity findTypeArticleOrThrow(Long idTypeArticle) {

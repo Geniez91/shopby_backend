@@ -252,6 +252,7 @@ public class GlobalExceptionHandler {
 @ExceptionHandler(Exception.class)
 public ResponseEntity<ProblemDetail> handleException(Exception ex){
     ProblemDetail pd=ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,ex.getMessage());
+    ex.printStackTrace();
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(pd);
 }
 

@@ -24,7 +24,7 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String upload(MultipartFile file) {
+    public String upload(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) {
             throw new ArticlePhotoUploadException("Fichier vide");
         }
@@ -35,7 +35,7 @@ public class LocalStorageService implements StorageService {
         String originalFilename = file.getOriginalFilename();
         String extension = getExtension(originalFilename);
         String fileName = UUID.randomUUID() + extension;
-        Path dir = rootDir.resolve("articles");
+        Path dir = rootDir.resolve(folder);
         Path target = dir.resolve(fileName).normalize();
 
         try {
@@ -46,7 +46,7 @@ public class LocalStorageService implements StorageService {
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
             }
-            return "/uploads/articles/" + fileName;
+            return "/uploads/"+folder+"/" + fileName;
         } catch (IOException e) {
             throw new ArticlePhotoUploadException("Erreur sauvegarde fichier");
         }
@@ -57,5 +57,10 @@ public class LocalStorageService implements StorageService {
         int idx = filename.lastIndexOf('.');
         if (idx == -1) return "";
         return filename.substring(idx).toLowerCase();
+    }
+
+    @Override
+    public String upload(MultipartFile file) {
+        return upload(file, "articles");
     }
 }

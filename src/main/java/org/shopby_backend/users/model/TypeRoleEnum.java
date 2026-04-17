@@ -20,6 +20,7 @@ public enum TypeRoleEnum {
             Set.of(
                     TypePermission.USER_CREATE,
                     TypePermission.USER_READ,
+                    TypePermission.USER_READ_ALL,
                     TypePermission.USER_UPDATE,
                     TypePermission.USER_DELETE,
                     TypePermission.USER_UPDATE_ROLE,

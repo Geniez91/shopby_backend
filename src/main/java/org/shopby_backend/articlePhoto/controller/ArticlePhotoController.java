@@ -27,4 +27,12 @@ public class ArticlePhotoController {
     public List<ArticlePhotoOutputDto> uploadPhotos(@PathVariable Long idArticle, @RequestPart("files") List<MultipartFile> files){
         return  articlePhotoService.uploadPhotos(idArticle,files);
     }
+
+    @GetMapping("/article/{idArticle}/photos")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ArticlePhotoOutputDto> getPhotosArticle(@PathVariable Long idArticle){
+        return articlePhotoService.getPhotosArticle(idArticle);
+    }
+
+
 }

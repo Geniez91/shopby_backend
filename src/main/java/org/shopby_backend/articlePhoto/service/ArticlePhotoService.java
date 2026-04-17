@@ -42,4 +42,10 @@ public class ArticlePhotoService {
         return listArticlePhoto.stream().map(articlePhoto->new ArticlePhotoOutputDto(articlePhoto.getIdPhoto(),articlePhoto.getArticle().getIdArticle(),articlePhoto.getUrl(),articlePhoto.getAlt(),articlePhoto.getPosition()))
                 .toList();
     }
+
+    public List<ArticlePhotoOutputDto> getPhotosArticle(Long articleId){
+        ArticleEntity articleEntity=articleRepository.findById(articleId).orElseThrow(()->new ArticleNotFoundException(articleId));
+       List<ArticlePhotoEntity> articlePhotoEntities= articlePhotoRepository.findByArticle_IdArticle(articleId);
+        return articlePhotoEntities.stream().map(photo->new ArticlePhotoOutputDto(photo.getIdPhoto(), articleEntity.getIdArticle(),photo.getUrl(),photo.getAlt(),photo.getPosition())).toList();
+    }
 }

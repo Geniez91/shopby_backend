@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.shopby_backend.article.dto.AddArticleInputDto;
-import org.shopby_backend.article.dto.AddArticleOutputDto;
-import org.shopby_backend.article.dto.AddArticleWithRatingDto;
-import org.shopby_backend.article.dto.ArticleFilter;
+import org.shopby_backend.article.dto.*;
 import org.shopby_backend.article.service.ArticleService;
 import org.shopby_backend.tools.ErrorResponse;
 import org.springframework.data.domain.Page;
@@ -145,7 +142,7 @@ public void deleteArticle(@PathVariable Long id){
      articleService.deleteArticle(id);
 }
 
-@GetMapping
+@DeleteMapping
 @ResponseStatus(HttpStatus.OK)
 @Operation(summary = "Récupérer tous les articles avec les filtres et pagination", description = "Permet de filtrer par prix, marque, type, nom")
 @ApiResponses({
@@ -181,7 +178,13 @@ public Page<AddArticleOutputDto> getAllArticles(ArticleFilter filter, Pageable p
                 )
         )
 })
-public AddArticleOutputDto getArticleById(@PathVariable Long id){
+public GetArticleOutputDto getArticleById(@PathVariable Long id){
     return articleService.getArticleById(id);
+}
+
+@GetMapping("/latest")
+@ResponseStatus(HttpStatus.OK)
+public List<GetArticlesOutputDto>getLastAddedArticles(){
+return articleService.getLastFiveArticleAdded();
 }
 }

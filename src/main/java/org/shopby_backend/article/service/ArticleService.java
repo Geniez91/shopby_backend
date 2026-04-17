@@ -1,7 +1,10 @@
 package org.shopby_backend.article.service;
-import org.shopby_backend.article.dto.AddArticleWithRatingDto;
-import org.shopby_backend.article.dto.ArticleFilter;
+import org.shopby_backend.article.dto.*;
 import org.shopby_backend.article.specification.ArticleSpecification;
+import org.shopby_backend.articlePhoto.dto.ArticlePhotoOutputDto;
+import org.shopby_backend.articlePhoto.model.ArticlePhotoEntity;
+import org.shopby_backend.articlePhoto.persistence.ArticlePhotoRepository;
+import org.shopby_backend.articlePhoto.service.ArticlePhotoService;
 import org.shopby_backend.comment.persistence.CommentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,8 +12,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.shopby_backend.article.dto.AddArticleInputDto;
-import org.shopby_backend.article.dto.AddArticleOutputDto;
 import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.brand.model.BrandEntity;
@@ -37,6 +38,9 @@ public class ArticleService {
     private final BrandService brandService;
     private final TypeArticleService typeArticleService;
     private final CommentRepository commentRepository;
+    private final ArticlePhotoService articlePhotoService;
+    private final ArticlePhotoRepository articlePhotoRepository;
+
 
     @Transactional
     public AddArticleOutputDto addNewArticle(AddArticleInputDto addArticleInputDto){
@@ -119,13 +123,40 @@ public class ArticleService {
         return page.map(articleMapper::toDto);
     }
 
-    public AddArticleOutputDto getArticleById(Long id){
+    public GetArticleOutputDto getArticleById(Long id){
         long start = System.nanoTime();
         ArticleEntity articleEntity=this.findArticleOrThrow(id);
+        List<ArticlePhotoOutputDto> articlePhotoOutputDto = articlePhotoService.getPhotosArticle(articleEntity.getIdArticle());
+        List<String>breadcrum=typeArticleService.buildBreadCrumb(articleEntity.getTypeArticle());
         long durationMs = Tools.getDurationMs(start);
         log.info("L'article {} a bien été trouvé, durationMs = {}",articleEntity.getIdArticle(),durationMs);
-        return articleMapper.toDto(articleEntity);
+        return articleMapper.toGetDto(articleEntity,articlePhotoOutputDto,breadcrum);
     }
+
+    public List<GetArticlesOutputDto> getLastFiveArticleAdded(){
+        long start = System.nanoTime();
+        List<ArticleEntity> articleEntities = articleRepository.findTop5ByOrderByCreationDateDesc();
+        List<Long> articleIds = articleEntities.stream()
+                .map(ArticleEntity::getIdArticle)
+                .toList();
+
+        List<ArticlePhotoEntity> covers =
+                articlePhotoRepository.findCoversByArticleIds(articleIds);
+
+        Map<Long, String> coverMap = covers.stream()
+                .collect(Collectors.toMap(
+                        photo -> photo.getArticle().getIdArticle(),
+                        ArticlePhotoEntity::getUrl
+                ));
+
+        long durationMs = Tools.getDurationMs(start);
+        log.info("Les 5 derniers articles ont bien été trouvé, durationMs = {}",durationMs);
+        return articleEntities.stream().map(article -> {
+            String coverUrl = coverMap.getOrDefault(article.getIdArticle(), null);
+            return articleMapper.toGetArticlesDto(article, coverUrl);
+        }).toList();
+    }
+
 
     public ArticleEntity findArticleOrThrow(Long id){
         return articleRepository.findById(id).orElseThrow(()->{
@@ -134,4 +165,5 @@ public class ArticleService {
             return exception;
         });
     }
+
 }

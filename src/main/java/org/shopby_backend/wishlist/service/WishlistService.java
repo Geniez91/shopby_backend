@@ -7,6 +7,7 @@ import org.shopby_backend.article.mapper.ArticleMapper;
 import org.shopby_backend.article.model.ArticleEntity;
 import org.shopby_backend.article.persistence.ArticleRepository;
 import org.shopby_backend.article.service.ArticleService;
+import org.shopby_backend.articlePhoto.service.LocalStorageService;
 import org.shopby_backend.exception.article.ArticleNotFoundException;
 import org.shopby_backend.exception.users.UsersNotFoundException;
 import org.shopby_backend.exception.wishlist.*;
@@ -31,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.swing.text.html.parser.Entity;
 import java.util.List;
@@ -46,6 +48,7 @@ public class WishlistService {
     private final UsersService usersService;
     private final ArticleService articleService;
     private final ArticleMapper articleMapper;
+    private final LocalStorageService localStorageService;
 
     @Transactional
     public WishlistOutputDto addWishList(WishlistInputDto wishlistInputDto) {
@@ -97,9 +100,9 @@ public class WishlistService {
 
     public Page<WishlistOutputDto>getAllWishListByUserId(WishlistFilter filter, WishListGetAllByIdDto wishListGetAllByIdDto,Pageable pageable){
         long start = System.nanoTime();
-        Specification<WishlistEntity> wishlistEntitySpecification = WishlistSpecification.withFilters(filter);
         UsersEntity user=this.usersService.findUsersOrThrow(wishListGetAllByIdDto.userId());
-        Page<WishlistEntity> page = wishlistRepository.findByUserId(wishlistEntitySpecification,user.getId(),pageable);
+        Specification<WishlistEntity> wishlistEntitySpecification = Specification.where(WishlistSpecification.withFilters(filter)).and(WishlistSpecification.hasUserId(user.getId()));
+        Page<WishlistEntity> page = wishlistRepository.findAll(wishlistEntitySpecification,pageable);
         long durationMs = Tools.getDurationMs(start);
         log.info("Le nombre de list d'envie est de {}, page : {} pour l'utilisateur {},durationMs={}",page.getNumberOfElements(),page.getNumber(),wishListGetAllByIdDto.userId(),durationMs);
         return page.map(wishlistMapper::toOutputDto);
@@ -175,5 +178,13 @@ public class WishlistService {
             log.warn(LogMessages.WISHLIST_NOT_FOUND_BY_ID,wishlistId,exception);
             return exception;
         });
+    }
+
+    public WishlistImageUploadDto uploadWishlistPhoto(Integer WishlistId, MultipartFile file){
+        WishlistEntity wishlistEntity= this.findWishlistByIdOrThrow(WishlistId);
+        String url = localStorageService.upload(file, "wishlist");
+        wishlistEntity.setImageUrl(url);
+        wishlistRepository.save(wishlistEntity);
+        return new WishlistImageUploadDto(url);
     }
 }

@@ -1,12 +1,13 @@
 package org.shopby_backend.article.mapper;
 
-import org.shopby_backend.article.dto.AddArticleInputDto;
-import org.shopby_backend.article.dto.AddArticleOutputDto;
-import org.shopby_backend.article.dto.AddArticleWithRatingDto;
+import org.shopby_backend.article.dto.*;
 import org.shopby_backend.article.model.ArticleEntity;
+import org.shopby_backend.articlePhoto.dto.ArticlePhotoOutputDto;
 import org.shopby_backend.brand.model.BrandEntity;
 import org.shopby_backend.typeArticle.model.TypeArticleEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class ArticleMapper {
@@ -26,12 +27,45 @@ public class ArticleMapper {
                 articleEntity.getName(),
                 articleEntity.getDescription(),
                 articleEntity.getPrice(),
-                articleEntity.getTypeArticle().getLibelle(),
                 articleEntity.getBrand().getLibelle(),
+                articleEntity.getTypeArticle().getLibelle(),
                 articleEntity.getCreationDate(),
                 articleEntity.getVersion(),
                 articleEntity.getAverageRating(),
                 articleEntity.getRatingCount()
         );
     };
+
+    public GetArticlesOutputDto toGetArticlesDto(ArticleEntity articleEntity,String coverUrl) {
+        return new GetArticlesOutputDto(
+                articleEntity.getIdArticle(),
+                articleEntity.getName(),
+                articleEntity.getDescription(),
+                articleEntity.getPrice(),
+                articleEntity.getBrand().getLibelle(),
+                articleEntity.getTypeArticle().getLibelle(),
+                articleEntity.getCreationDate(),
+                articleEntity.getVersion(),
+                articleEntity.getAverageRating(),
+                articleEntity.getRatingCount(),
+                coverUrl
+        );
+    }
+
+    public GetArticleOutputDto toGetDto(ArticleEntity articleEntity, List<ArticlePhotoOutputDto> articlePhotoOutputDto, List<String> breadcrumDto) {
+        return new GetArticleOutputDto(
+                articleEntity.getIdArticle(),
+                articleEntity.getName(),
+                articleEntity.getDescription(),
+                articleEntity.getPrice(),
+                articleEntity.getBrand().getLibelle(),
+                articleEntity.getTypeArticle().getLibelle(),
+                articleEntity.getCreationDate(),
+                articleEntity.getVersion(),
+                articleEntity.getAverageRating(),
+                articleEntity.getRatingCount(),
+                articlePhotoOutputDto,
+                breadcrumDto
+        );
+    }
 }

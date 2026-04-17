@@ -49,7 +49,7 @@ public class JwtService {
 
         JwtEntity jwt=JwtEntity
                 .builder()
-                .token(jwtMap.get(BEARER))
+                .token(jwtMap.get("token"))
                 .disabled(false)
                 .expired(false)
                 .user(user)
@@ -91,7 +91,7 @@ public class JwtService {
                 .addClaims(claims)
                 .signWith(getKey(), SignatureAlgorithm.HS256)///Algorithme de Signature
                 .compact();
-        return Map.of(BEARER,bearer);
+        return Map.of("token", bearer);
     }
 
     private Key getKey(){
